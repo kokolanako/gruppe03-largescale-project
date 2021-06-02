@@ -12,19 +12,22 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javafx.*;
 
 public class Client {
     InetAddress ip = null;
     int port=5001;
-    ArrayList<String> aktionsliste=new ArrayList<>();
+
     String name;
-    //Todo weitere Attribute
+    //Todo Als JSONObjekt speichern
 
     public Client(File config) {
         //TODO read Config and init attributes
         try {
-
-            Socket socket = SocketFactory.getDefault().createSocket(ip, port);
+//            JsonReader jsonReader = Json.createReader(...);
+//            JsonObject object = jsonReader.readObject();
+//            jsonReader.close();
+            Socket socket = SocketFactory.getDefault().createSocket("localhost", port);
             var dataInputStream = new DataInputStream(socket.getInputStream());
             var dataOutputStream = new DataOutputStream(socket.getOutputStream());
             //TODO Try to register
@@ -32,6 +35,7 @@ public class Client {
 
             //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
             //TODO: Parallel Actionen ausfuehren
+            ArrayList<String> aktionsliste=new ArrayList<>();
             for (String aktion: aktionsliste
                  ) {
                 //Aktion entsprechend interpretieren und an Server schicken.
@@ -41,7 +45,7 @@ public class Client {
             //TODO
         }
     }
-
+//TODO Hilfsmethoden zu schicken von Message an Server etc
 
 //    public static void main(String[] args) throws UnknownHostException, IOException {
 //
