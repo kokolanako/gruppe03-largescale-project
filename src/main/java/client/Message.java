@@ -15,7 +15,7 @@ public class Message implements Serializable {
     private String TYPE;  //for client: REGISTER, MESSAGE // for server: ASK_PUBLIC_KEY, OK, ERROR
     @Setter
     @Getter
-    private int id;
+    private String id;
     @Setter
     @Getter
     private String firstName;
@@ -29,18 +29,18 @@ public class Message implements Serializable {
     @Getter
     private String messageText;
 
-    private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
+     void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
         TYPE = aInputStream.readUTF();
-        id = aInputStream.readInt();
+        id = aInputStream.readUTF();
         firstName = aInputStream.readUTF();
         lastName = aInputStream.readUTF();
         publicKey = aInputStream.readUTF();
         messageText= aInputStream.readUTF();
     }
 
-    private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
+     void writeObject(ObjectOutputStream aOutputStream) throws IOException {
         aOutputStream.writeUTF(TYPE);
-        aOutputStream.writeInt(id);
+        aOutputStream.writeUTF(id);
         aOutputStream.writeUTF(firstName);
         aOutputStream.writeUTF(lastName);
         aOutputStream.writeUTF(publicKey);
