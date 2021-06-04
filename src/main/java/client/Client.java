@@ -2,10 +2,7 @@ package client;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -15,14 +12,13 @@ import java.util.Scanner;
 import org.json.*;
 
 
-
 public class Client {
 
     JSONObject jsonObject;
 
     public Client(File config) {
         //TODO read Config and init attribute
-        this.jsonObject=new JSONObject("{\n" +
+        this.jsonObject = new JSONObject("{\n" +
                 "\t\"general\": {\n" +
                 "\t\t\"duration\": \"360\",\n" +
                 "\t\t\"retries\": \"5\",\n" +
@@ -52,46 +48,49 @@ public class Client {
         try {
             //Test
             System.out.println(jsonObject.get("person"));
-            System.out.println(((JSONObject)jsonObject.get("server")).getInt("port"));
+            System.out.println(((JSONObject) jsonObject.get("server")).getInt("port"));
 
             //Serverconnection
             Socket socket = SocketFactory.getDefault().createSocket(
-                    ((JSONObject)jsonObject.get("server")).getString("ip"),
-                    ((JSONObject)jsonObject.get("server")).getInt("port"));
+                    ((JSONObject) jsonObject.get("server")).getString("ip"),
+                    ((JSONObject) jsonObject.get("server")).getInt("port"));
 
-            var dataInputStream = new DataInputStream(socket.getInputStream());
-            var dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            var objectInputStream = new ObjectInputStream(socket.getInputStream());
+            var objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
             //TODO Try to register
-            //dataOuputStream enthaelt ACK wenn erfolgreich else Fehlermeldung
+            //objectInputStream enthaelt ACK wenn erfolgreich else Fehlermeldung
+
+            Message message = new Message();
+            message.setTYPE("REGISTER");
+            message.setId(((JSONObject) jsonObject.get("person")).getString("id"));
+            String[] name = (((JSONObject) jsonObject.get("person")).getString("name")).split(",");
+            message.setLastName(name[0]);
+            message.setFirstName(name[1]);
+            message.setPublicKey(((JSONObject) ((JSONObject) jsonObject.get("person")).get("keys")).getString("public"));
+            message.setMessageText("");
+            //send to server
+            message.writeObject(objectOutputStream);
+
+            //FIXME no error but also no awnser from server
+            Message awnser = new Message();
+            awnser.readObject(objectInputStream);
+            System.out.println(awnser.getTYPE() + " " + awnser.getMessageText());
+            //oder so?
+            // System.out.println(objectInputStream);
 
             //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
             //TODO: Parallel Actionen ausfuehren
-            ArrayList<String> aktionsliste=new ArrayList<>();
-            for (String aktion: aktionsliste
-                 ) {
+            ArrayList<String> aktionsliste = new ArrayList<>();
+            for (String aktion : aktionsliste
+            ) {
                 //Aktion entsprechend interpretieren und an Server schicken.
                 // Beachten von Timeout und Retry. Ggfs. Hilfsmethode schreiben
             }
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             //TODO
         }
     }
 //TODO Hilfsmethoden zu schicken von Message an Server etc
 
-//    public static void main(String[] args) throws UnknownHostException, IOException {
-//
-//        System.out.println("client starts");
-//
-//        Socket socket= SocketFactory.getDefault().createSocket("localhost", 5001);
-//        var scanner = new Scanner(System.in);
-//        var dataInputStream = new DataInputStream(socket.getInputStream());
-//        var dataOutputStream = new DataOutputStream(socket.getOutputStream());
-//        while (scanner.hasNextLine()) {
-//            System.out.print("Next Message: ");
-//            dataOutputStream.writeUTF(scanner.nextLine());
-//            System.out.println(dataInputStream.readUTF());
-//        }
-//        scanner.close();
-//    }
 }
