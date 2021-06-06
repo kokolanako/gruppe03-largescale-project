@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 
 public class FileReader {
 
-    static JSONObject read(String path) throws IOException {
+    static String read(String path) throws IOException {
         File file = new File("src/main/resources/configs/config_1.json");
         String text = "";
         if (file.exists()){
@@ -20,6 +20,6 @@ public class FileReader {
                 text += line;
             }
         }
-        return new JSONObject(text);
+        return text;
     }
 }
