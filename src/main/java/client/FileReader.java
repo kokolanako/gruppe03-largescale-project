@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 public class FileReader {
 
     static String read(String path) throws IOException {
-        File file = new File("src/main/resources/configs/config_1.json");
+        File file = new File(path);
         String text = "";
         if (file.exists()){
             BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(file.getPath()))));
@@ -20,6 +20,7 @@ public class FileReader {
                 text += line;
             }
         }
+        System.out.print("\n");
         return text;
     }
 }

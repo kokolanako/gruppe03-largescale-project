@@ -6,7 +6,7 @@ import java.io.IOException;
 public class ApplicationStarter {
 
   public static void main(String[] args) throws IOException {
-    String path="C:/Users/klein/IdeaProjects/gruppe03-largescale-project/src/main/resources/configs/config_1.json"; //TODO relativen Pfad zu Config Datei
+    String path="src/main/resources/configs/config_1.json";
     try{
       Client client=new Client(path);
       System.out.println("Client created and registered");
