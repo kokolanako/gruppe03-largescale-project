@@ -1,4 +1,4 @@
-package client;
+package communication;
 
 import lombok.Getter;
 import lombok.Setter;

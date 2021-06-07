@@ -1,13 +1,11 @@
 package client;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
+
+import communication.Message;
 import org.json.*;
 
 
@@ -30,7 +28,8 @@ public class Client {
             register(objectInputStream, objectOutputStream);
 
             //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
-            //TODO: Parallel Actionen ausfuehren ??? wieso? man muss ja auf die registrierung warten
+            //TODO: Parallel Actionen ausfuehren ??? wieso? man muss ja auf die registrierung warten ...
+            // A: Ich meinte nach der Regestrierung und paraalel zum Warten, ob man Nachrichten von anderen erhaelt
             ArrayList<String> aktionsliste = new ArrayList<>();
             for (String aktion : aktionsliste
             ) {
