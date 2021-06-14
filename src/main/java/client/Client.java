@@ -132,4 +132,13 @@ public class Client {
     public int getDuration() {
         return ((JSONObject) this.jsonObject.get("general")).getInt("duration");
     }
+
+    public void closeConnection() throws IOException, ClassNotFoundException {
+        Message message = new Message();
+        message.setTYPE("CLOSE_CONNECTION");
+        objectOutputStream.writeObject(message);
+        objectOutputStream.flush();
+        Message answer = (Message) objectInputStream.readObject();
+        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+    }
 }

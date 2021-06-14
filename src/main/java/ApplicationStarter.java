@@ -14,6 +14,8 @@ public class ApplicationStarter {
             client.getDuration();
             //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
             client.runAllActions();
+            //TODO if duration over
+            client.closeConnection();
         } catch (Exception e) {
             e.printStackTrace();
         }
