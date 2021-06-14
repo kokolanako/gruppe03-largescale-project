@@ -9,15 +9,15 @@ import communication.Message;
 import org.json.*;
 
 
-
 public class Client {
     JSONObject jsonObject;
+    Socket socket;
 
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
         try {
             //Serverconnection
-            Socket socket = SocketFactory.getDefault().createSocket(
+            this.socket = SocketFactory.getDefault().createSocket(
                     ((JSONObject) jsonObject.get("server")).getString("ip"),
                     ((JSONObject) jsonObject.get("server")).getInt("port"));
             System.out.println("Connected to Server:" + socket.getInetAddress());
@@ -26,16 +26,6 @@ public class Client {
             var objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
             register(objectInputStream, objectOutputStream);
-
-            //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
-            //TODO: Parallel Actionen ausfuehren ??? wieso? man muss ja auf die registrierung warten ...
-            // A: Ich meinte nach der Regestrierung und paraalel zum Warten, ob man Nachrichten von anderen erhaelt
-            ArrayList<String> aktionsliste = new ArrayList<>();
-            for (String aktion : aktionsliste
-            ) {
-                //Aktion entsprechend interpretieren und an Server schicken.
-                // Beachten von Timeout und Retry. Ggfs. Hilfsmethode schreiben
-            }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -52,12 +42,12 @@ public class Client {
         objectOutputStream.writeObject(message); //switched message and objectoutputstream //todo: soll ein dataOutputstream erzeugt werden
         objectOutputStream.flush();
         System.out.println("Message send");
-        //FIXME no error but also no answer from server
 
-        System.out.println("Waiting for answer");
-        Message answer= (Message)objectInputStream.readObject();
-        System.out.println("Answer received");
-        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+        //FIXME no error but also no answer from server
+//        System.out.println("Waiting for answer");
+//        Message answer= (Message)objectInputStream.readObject();
+//        System.out.println("Answer received");
+//        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
         //oder so?
         // System.out.println(objectInputStream);
     }
@@ -74,13 +64,37 @@ public class Client {
         return message;
     }
 
-    /*void send(String Name, String messageText){
+    private void sendName(String Name, String messageText) {
 
     }
 
-    void send(String id , String messageText){
+    private void sendID(String id, String messageText) {
 
-    }*/
-//TODO Hilfsmethoden zu schicken von Message an Server etc
+    }
 
+    //TODO Hilfsmethoden zu schicken von Message an Server etc
+    public void runAllActions() {
+        //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
+        //TODO: Parallel Actionen ausfuehren ??? wieso? man muss ja auf die registrierung warten ...
+        // A: Ich meinte nach der Regestrierung und paralel zum Warten, ob man Nachrichten von anderen erhaelt
+        ArrayList<String> aktionsliste = new ArrayList<>();
+        for (Object action : (JSONArray) jsonObject.get("actions")
+        ) {
+            String[] splitAction = action.toString().split("\\[");
+            if (splitAction.length == 3) {
+                if (splitAction[0].trim().equals("SEND")) {
+                    String message = splitAction[2].trim().substring(0, splitAction[2].trim().length() - 1);
+                    String reciever = splitAction[1].trim().substring(0, splitAction[1].trim().length() - 1);
+                    if (reciever.contains(",")) {
+                        sendName(reciever, message);
+                    } else {
+                        sendID(reciever, message);
+                    }
+                }
+            }
+
+            //Aktion entsprechend interpretieren und an Server schicken.
+            // Beachten von Timeout und Retry. Ggfs. Hilfsmethode schreiben
+        }
+    }
 }

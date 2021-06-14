@@ -10,6 +10,7 @@ public class ApplicationStarter {
     try{
       Client client=new Client(path);
       System.out.println("Client created and registered");
+      client.runAllActions();
     }catch(Exception e){
       e.printStackTrace();
     }
