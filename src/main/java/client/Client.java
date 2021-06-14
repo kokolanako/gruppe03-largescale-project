@@ -14,6 +14,7 @@ public class Client {
     Socket socket;
     ObjectInputStream objectInputStream;
     ObjectOutputStream objectOutputStream;
+
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
         try {
@@ -27,6 +28,7 @@ public class Client {
             this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
             register(objectInputStream, objectOutputStream);
+
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -61,39 +63,51 @@ public class Client {
         return message;
     }
 
+    private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
+        message.setTYPE("ASK_PUBLIC_KEY");
+        System.out.println("Start sending ASK_PUBLIC_KEY_Message");
+        this.objectOutputStream.writeObject(message);
+        this.objectOutputStream.flush();
+        System.out.println("Message send");
+
+        System.out.println("Waiting for answerMessage");
+        Message answer = (Message) objectInputStream.readObject();
+        System.out.println("Answer received");
+        System.out.println(answer.getTYPE() + " " + answer.getPublicKey());
+        return answer.getPublicKey();
+    }
+
     private void sendName(String name, String messageText) {
         try {
 
-
+            //get public key of receiver
             Message askKeyMessage = new Message();
-            askKeyMessage.setTYPE("ASK_PUBLIC_KEY");
             String[] splitName = name.split(",");
             askKeyMessage.setLastName(splitName[0].trim());
             askKeyMessage.setFirstName(splitName[1].trim());
+            String publicKey = getReceiverPublicKey(askKeyMessage);
 
-            System.out.println("Start sending ASK_PUBLIC_KEY_Message");
-            objectOutputStream.writeObject(askKeyMessage);
+            //encrypt message
+            Message sendMessage;
+            sendMessage = createSendMessage(messageText, publicKey);
+            sendMessage.setLastName(splitName[0]);
+            sendMessage.setFirstName(splitName[1]);
+
+
+            //send message to receiver
+            System.out.println("Start sending Message");
+            objectOutputStream.writeObject(sendMessage);
             objectOutputStream.flush();
             System.out.println("Message send");
 
-            System.out.println("Waiting for answer");
-            //FIXME java.net.SocketException: Software caused connection abort: recv failed
-            Message answer = (Message) objectInputStream.readObject();
+            System.out.println("Waiting for answerMessage");
+            Message answerMessage = (Message) objectInputStream.readObject();
             System.out.println("Answer received");
-            System.out.println(answer.getTYPE() + " " + answer.getMessageText());
-
-            Message sendMessage;
-            if(answer.getTYPE().equals("ASK_PUBLIC_KEY")){
-                sendMessage=createSendMessage(messageText,answer.getMessageText());
-            }
-
+            System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
+            //TODO Beachte Timeout und Retry, wenn Server throw Exception.
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-
-
-        //TODO Aktion an Server schicken.
-        // Beachte Timeout und Retry.
     }
 
     private void sendID(String id, String messageText) {
