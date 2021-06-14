@@ -44,10 +44,10 @@ public class Client {
         System.out.println("Message send");
 
         //FIXME no error but also no answer from server
-//        System.out.println("Waiting for answer");
-//        Message answer= (Message)objectInputStream.readObject();
-//        System.out.println("Answer received");
-//        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+        System.out.println("Waiting for answer");
+        Message answer = (Message) objectInputStream.readObject();
+        System.out.println("Answer received");
+        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
         //oder so?
         // System.out.println(objectInputStream);
     }
@@ -72,11 +72,9 @@ public class Client {
 
     }
 
-    //TODO Hilfsmethoden zu schicken von Message an Server etc
+
     public void runAllActions() {
-        //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
-        //TODO: Parallel Actionen ausfuehren ??? wieso? man muss ja auf die registrierung warten ...
-        // A: Ich meinte nach der Regestrierung und paralel zum Warten, ob man Nachrichten von anderen erhaelt
+
         ArrayList<String> aktionsliste = new ArrayList<>();
         for (Object action : (JSONArray) jsonObject.get("actions")
         ) {
@@ -96,5 +94,9 @@ public class Client {
             //Aktion entsprechend interpretieren und an Server schicken.
             // Beachten von Timeout und Retry. Ggfs. Hilfsmethode schreiben
         }
+    }
+
+    public int getDuration() {
+        return ((JSONObject) this.jsonObject.get("general")).getInt("duration");
     }
 }
