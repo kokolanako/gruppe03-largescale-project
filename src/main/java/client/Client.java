@@ -12,7 +12,8 @@ import org.json.*;
 public class Client {
     JSONObject jsonObject;
     Socket socket;
-
+    ObjectInputStream objectInputStream;
+    ObjectOutputStream objectOutputStream;
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
         try {
@@ -22,8 +23,8 @@ public class Client {
                     ((JSONObject) jsonObject.get("server")).getInt("port"));
             System.out.println("Connected to Server:" + socket.getInetAddress());
 
-            var objectInputStream = new ObjectInputStream(socket.getInputStream());
-            var objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            this.objectInputStream = new ObjectInputStream(socket.getInputStream());
+            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
             register(objectInputStream, objectOutputStream);
         } catch (IOException | ClassNotFoundException e) {
@@ -32,7 +33,6 @@ public class Client {
     }
 
     private void register(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream) throws IOException, ClassNotFoundException {
-        //TODO Try to register
         //objectInputStream enthaelt ACK wenn erfolgreich else Fehlermeldung
 
         //create message for registration
@@ -43,13 +43,10 @@ public class Client {
         objectOutputStream.flush();
         System.out.println("Message send");
 
-        //FIXME no error but also no answer from server
         System.out.println("Waiting for answer");
         Message answer = (Message) objectInputStream.readObject();
         System.out.println("Answer received");
         System.out.println(answer.getTYPE() + " " + answer.getMessageText());
-        //oder so?
-        // System.out.println(objectInputStream);
     }
 
     private Message createRegistrationMessage() {
@@ -64,18 +61,57 @@ public class Client {
         return message;
     }
 
-    private void sendName(String Name, String messageText) {
+    private void sendName(String name, String messageText) {
+        try {
 
+
+            Message askKeyMessage = new Message();
+            askKeyMessage.setTYPE("ASK_PUBLIC_KEY");
+            String[] splitName = name.split(",");
+            askKeyMessage.setLastName(splitName[0].trim());
+            askKeyMessage.setFirstName(splitName[1].trim());
+
+            System.out.println("Start sending ASK_PUBLIC_KEY_Message");
+            objectOutputStream.writeObject(askKeyMessage);
+            objectOutputStream.flush();
+            System.out.println("Message send");
+
+            System.out.println("Waiting for answer");
+            //FIXME java.net.SocketException: Software caused connection abort: recv failed
+            Message answer = (Message) objectInputStream.readObject();
+            System.out.println("Answer received");
+            System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+
+            Message sendMessage;
+            if(answer.getTYPE().equals("ASK_PUBLIC_KEY")){
+                sendMessage=createSendMessage(messageText,answer.getMessageText());
+            }
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+        //TODO Aktion an Server schicken.
+        // Beachte Timeout und Retry.
     }
 
     private void sendID(String id, String messageText) {
-
+        //TODO Aktion an Server schicken.
+        // Beachte Timeout und Retry.
     }
 
+    private Message createSendMessage(String messageText, String recieverPublicKey) {
+        Message message = new Message();
+        message.setTYPE("MESSAGE");
+        //TODO messageText verschluesseln
+        String cryptedText = messageText;
+        message.setMessageText(cryptedText);
+
+        return message;
+    }
 
     public void runAllActions() {
-
-        ArrayList<String> aktionsliste = new ArrayList<>();
         for (Object action : (JSONArray) jsonObject.get("actions")
         ) {
             String[] splitAction = action.toString().split("\\[");
@@ -90,9 +126,6 @@ public class Client {
                     }
                 }
             }
-
-            //Aktion entsprechend interpretieren und an Server schicken.
-            // Beachten von Timeout und Retry. Ggfs. Hilfsmethode schreiben
         }
     }
 
