@@ -35,5 +35,6 @@ public class MessageHandlerTest {
         String encrypted=this.handler.encrypt(text,testPub);
         String decrypted=this.handler.decrypt(encrypted,testPriv);
         Assertions.assertEquals(text,decrypted);
+        this.handler.generateKeyPair();
     }
 }
