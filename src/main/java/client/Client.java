@@ -11,9 +11,9 @@ import org.json.*;
 
 public class Client {
     JSONObject jsonObject;
-    Socket socket;
-    ObjectInputStream objectInputStream;
-    ObjectOutputStream objectOutputStream;
+    private Socket socket;
+    private ObjectInputStream objectInputStream;
+    private ObjectOutputStream objectOutputStream;
 
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
@@ -29,6 +29,7 @@ public class Client {
 
             register(objectInputStream, objectOutputStream);
 
+            System.out.println("Client " + ((JSONObject) jsonObject.get("person")).getString("name") + " created and registered");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -41,7 +42,7 @@ public class Client {
         Message message = createRegistrationMessage();
 
         //send to server
-        System.out.println("Start sending Message");
+        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending Message");
         objectOutputStream.writeObject(message); //switched message and objectoutputstream //todo: soll ein dataOutputstream erzeugt werden
         objectOutputStream.flush();
         System.out.println("Message send");
@@ -57,8 +58,8 @@ public class Client {
         message.setTYPE("REGISTER");
         message.setId(((JSONObject) jsonObject.get("person")).getString("id"));
         String[] name = (((JSONObject) jsonObject.get("person")).getString("name")).split(",");
-        message.setLastName(name[0]);
-        message.setFirstName(name[1]);
+        message.setLastName(name[0].trim().toLowerCase());
+        message.setFirstName(name[1].trim().toLowerCase());
         message.setPublicKey(((JSONObject) ((JSONObject) jsonObject.get("person")).get("keys")).getString("public"));
         message.setMessageText("");
         return message;
@@ -71,7 +72,7 @@ public class Client {
             e.printStackTrace();
         }
         message.setTYPE("ASK_PUBLIC_KEY");
-        System.out.println("Start sending ASK_PUBLIC_KEY_Message");
+        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending ASK_PUBLIC_KEY_Message");
         this.objectOutputStream.writeObject(message);
         this.objectOutputStream.flush();
         System.out.println("Message send");
@@ -89,6 +90,9 @@ public class Client {
             //get public key of receiver
             Message askKeyMessage = new Message();
             String[] splitName = name.split(",");
+            splitName[0] = splitName[0].toLowerCase();
+            splitName[1] = splitName[1].toLowerCase();
+
             askKeyMessage.setLastName(splitName[0].trim());
             askKeyMessage.setFirstName(splitName[1].trim());
             String publicKey = getReceiverPublicKey(askKeyMessage);
@@ -98,26 +102,47 @@ public class Client {
             sendMessage = createSendMessage(messageText, publicKey);
             sendMessage.setLastName(splitName[0]);
             sendMessage.setFirstName(splitName[1]);
+            sendMessage(sendMessage);
 
-
-            //send message to receiver
-            System.out.println("Start sending Message");
-            objectOutputStream.writeObject(sendMessage);
-            objectOutputStream.flush();
-            System.out.println("Message send");
-
-            System.out.println("Waiting for answerMessage");
-            Message answerMessage = (Message) objectInputStream.readObject();
-            System.out.println("Answer received");
-            System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
-            //TODO Beachte Timeout und Retry, wenn Server throw Exception.
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
+    private void sendMessage(Message message) throws IOException, ClassNotFoundException {
+        //send message to receiver
+        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " Start sending Message");
+        objectOutputStream.writeObject(message);
+        objectOutputStream.flush();
+        System.out.println("Message send");
+
+        System.out.println("Waiting for answerMessage");
+        Message answerMessage = (Message) objectInputStream.readObject();
+        System.out.println("Answer received");
+        System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
+        //TODO Beachte Timeout und Retry, wenn Server throw Exception.
+    }
+
     private void sendID(String id, String messageText) {
-        //TODO Aktion an Server schicken.
+        try {
+
+            //get public key of receiver
+            Message askKeyMessage = new Message();
+            askKeyMessage.setId(id);
+            String publicKey = getReceiverPublicKey(askKeyMessage);
+
+            //encrypt message
+            Message sendMessage;
+            sendMessage = createSendMessage(messageText, publicKey);
+            sendMessage.setId(id);
+
+            sendMessage(sendMessage);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
         // Beachte Timeout und Retry.
     }
 
