@@ -11,9 +11,9 @@ import org.json.*;
 
 public class Client {
     JSONObject jsonObject;
-    Socket socket;
-    ObjectInputStream objectInputStream;
-    ObjectOutputStream objectOutputStream;
+    private Socket socket;
+    private ObjectInputStream objectInputStream;
+    private ObjectOutputStream objectOutputStream;
 
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
@@ -29,6 +29,7 @@ public class Client {
 
             register(objectInputStream, objectOutputStream);
 
+            System.out.println("Client " + ((JSONObject) jsonObject.get("person")).getString("name") + " created and registered");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -40,7 +41,7 @@ public class Client {
         //create message for registration
         Message message = createRegistrationMessage();
         //send to server
-        System.out.println("Start sending Message");
+        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending Message");
         objectOutputStream.writeObject(message); //switched message and objectoutputstream //todo: soll ein dataOutputstream erzeugt werden
         objectOutputStream.flush();
         System.out.println("Message send");
@@ -65,7 +66,7 @@ public class Client {
 
     private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
         message.setTYPE("ASK_PUBLIC_KEY");
-        System.out.println("Start sending ASK_PUBLIC_KEY_Message");
+        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending ASK_PUBLIC_KEY_Message");
         this.objectOutputStream.writeObject(message);
         this.objectOutputStream.flush();
         System.out.println("Message send");
@@ -95,7 +96,7 @@ public class Client {
 
 
             //send message to receiver
-            System.out.println("Start sending Message");
+            System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " Start sending Message");
             objectOutputStream.writeObject(sendMessage);
             objectOutputStream.flush();
             System.out.println("Message send");
