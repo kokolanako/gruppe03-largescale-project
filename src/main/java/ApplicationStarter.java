@@ -14,7 +14,6 @@ public class ApplicationStarter {
             Client client2 = new Client(path2);
             //TODO starte Timer oder so mit Duration. Wenn diese abgelaufen, beende Client.
             client1.getDuration();
-            //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
             client1.runAllActions();
             client2.runAllActions();
 

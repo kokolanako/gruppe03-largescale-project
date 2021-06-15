@@ -84,7 +84,8 @@ public class Client {
                 return answer;
             } else {
                 if (answer.getTYPE().equals("MESSAGE")) {
-                    System.out.println("Received Message");
+                    System.out.println(((JSONObject) jsonObject.get("person")).getString("name") +
+                            " received Message from " + answer.getFirstName() + " " + answer.getLastName());
                     //TODO logging message
                 }
             }
