@@ -9,40 +9,32 @@ import communication.Message;
 import org.json.*;
 
 
-
 public class Client {
     JSONObject jsonObject;
+    Socket socket;
+    ObjectInputStream objectInputStream;
+    ObjectOutputStream objectOutputStream;
 
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
         try {
             //Serverconnection
-            Socket socket = SocketFactory.getDefault().createSocket(
+            this.socket = SocketFactory.getDefault().createSocket(
                     ((JSONObject) jsonObject.get("server")).getString("ip"),
                     ((JSONObject) jsonObject.get("server")).getInt("port"));
             System.out.println("Connected to Server:" + socket.getInetAddress());
 
-            var objectInputStream = new ObjectInputStream(socket.getInputStream());
-            var objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            this.objectInputStream = new ObjectInputStream(socket.getInputStream());
+            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
             register(objectInputStream, objectOutputStream);
 
-            //TODO: solange online (berücksichtige duration), warte ob eine nachricht erhalten wird. Wenn ja logging.
-            //TODO: Parallel Actionen ausfuehren ??? wieso? man muss ja auf die registrierung warten ...
-            // A: Ich meinte nach der Regestrierung und paraalel zum Warten, ob man Nachrichten von anderen erhaelt
-            ArrayList<String> aktionsliste = new ArrayList<>();
-            for (String aktion : aktionsliste
-            ) {
-                //Aktion entsprechend interpretieren und an Server schicken.
-                // Beachten von Timeout und Retry. Ggfs. Hilfsmethode schreiben
-            }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     private void register(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream) throws IOException, ClassNotFoundException {
-        //TODO Try to register
         //objectInputStream enthaelt ACK wenn erfolgreich else Fehlermeldung
 
         //create message for registration
@@ -52,14 +44,11 @@ public class Client {
         objectOutputStream.writeObject(message); //switched message and objectoutputstream //todo: soll ein dataOutputstream erzeugt werden
         objectOutputStream.flush();
         System.out.println("Message send");
-        //FIXME no error but also no answer from server
 
         System.out.println("Waiting for answer");
-        Message answer= (Message)objectInputStream.readObject();
+        Message answer = (Message) objectInputStream.readObject();
         System.out.println("Answer received");
         System.out.println(answer.getTYPE() + " " + answer.getMessageText());
-        //oder so?
-        // System.out.println(objectInputStream);
     }
 
     private Message createRegistrationMessage() {
@@ -74,13 +63,96 @@ public class Client {
         return message;
     }
 
-    /*void send(String Name, String messageText){
+    private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
+        message.setTYPE("ASK_PUBLIC_KEY");
+        System.out.println("Start sending ASK_PUBLIC_KEY_Message");
+        this.objectOutputStream.writeObject(message);
+        this.objectOutputStream.flush();
+        System.out.println("Message send");
 
+        System.out.println("Waiting for answerMessage");
+        Message answer = (Message) objectInputStream.readObject();
+        System.out.println("Answer received");
+        System.out.println(answer.getTYPE() + " " + answer.getPublicKey());
+        return answer.getPublicKey();
     }
 
-    void send(String id , String messageText){
+    private void sendName(String name, String messageText) {
+        try {
 
-    }*/
-//TODO Hilfsmethoden zu schicken von Message an Server etc
+            //get public key of receiver
+            Message askKeyMessage = new Message();
+            String[] splitName = name.split(",");
+            askKeyMessage.setLastName(splitName[0].trim());
+            askKeyMessage.setFirstName(splitName[1].trim());
+            String publicKey = getReceiverPublicKey(askKeyMessage);
 
+            //encrypt message
+            Message sendMessage;
+            sendMessage = createSendMessage(messageText, publicKey);
+            sendMessage.setLastName(splitName[0]);
+            sendMessage.setFirstName(splitName[1]);
+
+
+            //send message to receiver
+            System.out.println("Start sending Message");
+            objectOutputStream.writeObject(sendMessage);
+            objectOutputStream.flush();
+            System.out.println("Message send");
+
+            System.out.println("Waiting for answerMessage");
+            Message answerMessage = (Message) objectInputStream.readObject();
+            System.out.println("Answer received");
+            System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
+            //TODO Beachte Timeout und Retry, wenn Server throw Exception.
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendID(String id, String messageText) {
+        //TODO Aktion an Server schicken.
+        // Beachte Timeout und Retry.
+    }
+
+    private Message createSendMessage(String messageText, String recieverPublicKey) {
+        Message message = new Message();
+        message.setTYPE("MESSAGE");
+        //TODO messageText verschluesseln
+        String cryptedText = messageText;
+        message.setMessageText(cryptedText);
+
+        return message;
+    }
+
+    public void runAllActions() {
+        for (Object action : (JSONArray) jsonObject.get("actions")
+        ) {
+            String[] splitAction = action.toString().split("\\[");
+            if (splitAction.length == 3) {
+                if (splitAction[0].trim().equals("SEND")) {
+                    String message = splitAction[2].trim().substring(0, splitAction[2].trim().length() - 1);
+                    String reciever = splitAction[1].trim().substring(0, splitAction[1].trim().length() - 1);
+                    if (reciever.contains(",")) {
+                        sendName(reciever, message);
+                    } else {
+                        sendID(reciever, message);
+                    }
+                }
+            }
+        }
+    }
+
+    public int getDuration() {
+        return ((JSONObject) this.jsonObject.get("general")).getInt("duration");
+    }
+
+    public void closeConnection() throws IOException, ClassNotFoundException {
+        Message message = new Message();
+        message.setTYPE("CLOSE_CONNECTION");
+        objectOutputStream.writeObject(message);
+        objectOutputStream.flush();
+        Message answer = (Message) objectInputStream.readObject();
+        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+    }
 }
