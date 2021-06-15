@@ -18,36 +18,14 @@ public class MessageHandler {
     //https://www.baeldung.com/java-rsa
 
     //https://www.programcreek.com/java-api-examples/?api=java.security.spec.EncodedKeySpec
-    private PublicKey publicKey;
-    private PrivateKey privateKey;
+
     private final String ALGORITHM = "RSA";
 
-    public MessageHandler(String privKey, String pubKey) throws NoSuchAlgorithmException {
-        //getBytes assumes that the keys are Base64 encoded
-        byte[] publicKeyBytes = Base64.getDecoder().decode(pubKey);
-        byte[] privateKeyBytes = Base64.getDecoder().decode(privKey);
-//        System.out.println(Arrays.toString(privateKeyBytes));
-        try {
-            KeyFactory keyFactory = KeyFactory.getInstance(this.ALGORITHM);
-            EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
-            this.publicKey=keyFactory.generatePublic(publicKeySpec);
 
-
-            KeyFactory keyFactory1 = KeyFactory.getInstance(this.ALGORITHM);
-            EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-            this.privateKey=keyFactory1.generatePrivate(privateKeySpec);
-            System.out.println(this.privateKey);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        }
-//        this.generateKeyPair();
-    }
 
     public void generateKeyPair() {
         KeyPairGenerator keyGen = null;
+
         try {
             keyGen = KeyPairGenerator.getInstance("RSA");
         } catch (NoSuchAlgorithmException e) {
@@ -55,15 +33,30 @@ public class MessageHandler {
         }
         keyGen.initialize(1024);
         KeyPair pair = keyGen.generateKeyPair();
-        this.privateKey = pair.getPrivate();
-        String privStringBase64 = Base64.getEncoder().encodeToString(this.privateKey.getEncoded());
+        PrivateKey privateKey = pair.getPrivate();
+        String privStringBase64 = Base64.getEncoder().encodeToString(privateKey.getEncoded());
         System.out.println("code generated Private " + privStringBase64);
-        this.publicKey = pair.getPublic();
-        String pubStringBase64 = Base64.getEncoder().encodeToString(this.publicKey.getEncoded());
+        PublicKey publicKey = pair.getPublic();
+        String pubStringBase64 = Base64.getEncoder().encodeToString(publicKey.getEncoded());
         System.out.println("code generated Public: " + pubStringBase64);
     }
 
-    public String encrypt(String clearText) {
+    public String encrypt(String clearText, String recipientPublicKeyBase64) {
+        byte[] publicKeyBytes = Base64.getDecoder().decode(recipientPublicKeyBase64);
+        PublicKey publicKey = null;
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance(this.ALGORITHM);
+            EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
+            publicKey = keyFactory.generatePublic(publicKeySpec);
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+
+
         Cipher encryptCipher = null;
         try {
             encryptCipher = Cipher.getInstance(this.ALGORITHM);
@@ -86,10 +79,17 @@ public class MessageHandler {
         return null;
     }
 
-    public String decrypt(String encryptedText) {
+    public String decrypt(String encryptedText, String privateKeyBase64) {
 
         Cipher decryptCipher = null;
+        PrivateKey privateKey = null;
         try {
+            byte[] privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64);
+            KeyFactory keyFactory = KeyFactory.getInstance(this.ALGORITHM);
+            EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+            privateKey = keyFactory.generatePrivate(privateKeySpec);
+
+
             decryptCipher = Cipher.getInstance(this.ALGORITHM);
             decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] decryptedMessageBytes = decryptCipher.doFinal(Base64.getDecoder().decode(encryptedText.getBytes()));
@@ -103,7 +103,10 @@ public class MessageHandler {
             e.printStackTrace();
         } catch (BadPaddingException e) {
             e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
         }
+
         System.out.println("NEVER HERE: Sth went wrong with decryption");
         return null;
     }

@@ -18,13 +18,9 @@ public class MessageHandlerTest {
         String pubKey="MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA33bh0ZPszl9wxWqP5TWtvO44QrqSdNA3yoPCRf8gBXvthOK9QK/xLART+q9yPIXjdUyR855GeAiPXvbee7IjzgY1ZGKBfpTxojPn13M+xRCae0SCezTWGZ1sxYYB1FRUsfQaTzzPC6wgJrYwh4BoRruWTruXzq3UbtQxmDKqCO2D0nIzrnubZQLfXBFMyGkVnqghiGblbXd7TcT6eJA7kGLnrCWhgt/TlLQwudOZ1VdfB7cHcNX8gCHV4E9rEoPMTEoc+kzXNEyWkdnivuNg7z1sGW2jDuHCcOEYJxwq6UaRn3qwe54VfkkMonR+d5UYuwJIbWuUhog5jcUbCQ5v8YhThk3vgiE6sDulAx1cOtCBk1JofTTnNOxzLOnxz82UUBYB0hUXRsWl8U15wELXIAw5glUzc0gVLMJeiLKwye7zCebpEL+HhKtTBcW6q7VWV4cu3dls18Tf+UjtMB+wRvh25y0mBNK+odKmVmko2Lf+IaAsbYvcjQTqxCVvIGqvQ9683RFBu1cPQkyiy60KldkRWVjTei98PjQafcqhxTAgUCBByoNuzTn+w0Mi1By4kIWkqOXEQWUQ0aprHPsk7v//aIJM2rBltcGk0EedwWvoiGaKzjdqIkXEP7RDM/h2V6VpYYAuPxsnSx1yPWfnixcoefQDDWXvBcvuvuRtAmcCAwEAAQ==";
 
 
-        String testPriv="MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIZNf7m4KMr5JDR4iSEa2/oKtiaR65fzlA9X3IsoveV+9RSsZhebwzsWDUY66Qkh1HHDeWS/encp5dsaDhXK+Q97LllFNJCfegJYQMk4hD1giz5/HCfKyakFSEV66KkNlaV0G51z5prMF/aSWkSjpU7OavGV7c0ZwJ7NoPugbyhNAgMBAAECgYAIpVaSoytlHbLZ+eSCEBOXPjdJtl0fVBv0/OgCwWWwL4MhiJOt82YXGK1UFxjHcLkXdckL1lPQ9g6JE11Sw9VStGhJUI/KAtcWyIlHgDQeiAswn0G6yF7kTlia4+1641sX5xl6Bxta+8l28C00myFvmszwVJiPgJ8zhFhISgDi1QJBAOTzoG4DaoaFMSbWl5DUJtQXEp/bRIFNVx7TvHgGxfVme6uOAsjwGqJJGWDUT3S8fbXypOkGXk6+mFfssqlf64cCQQCWK1OjnAdLrUz/p7gWgjtPPyjAGrgUDFQCbuC4GtBqZ2VbffEJqGcYPrXGS/Z/bSva+GHw3rBvdoSyhAH0YQqLAkAYrm7YDUQ5ljgzQKT8NvKsoIQgeYnMCqNermK96bUDfHXOi7OfJ8snPYwf1SNvqTZAHBVNDaOzB3by25BzE+UXAkBjhCz2ZMU08pDvb4+AYye42atAu7Q3nP/jaOVFPIfXq9OwsSKWeuJvX8eItPiS8583ipklTf5wr4M65l6BO/oHAkEAmACr4Iqt9mtEmplPk721zrfEZ+VI4Wic3zAjdYtWIzTllTiLAVPZMhrAJCbNujP8CwWOiqLBq2M/kAwjq39Y9w==";
-        String testPub="MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCGTX+5uCjK+SQ0eIkhGtv6CrYmkeuX85QPV9yLKL3lfvUUrGYXm8M7Fg1GOukJIdRxw3lkv3p3KeXbGg4VyvkPey5ZRTSQn3oCWEDJOIQ9YIs+fxwnysmpBUhFeuipDZWldBudc+aazBf2klpEo6VOzmrxle3NGcCezaD7oG8oTQIDAQAB";
-        try {
-            this.handler=new MessageHandler(testPriv, testPub);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
+        this.handler=new MessageHandler();
+
+
 
 
     }
@@ -33,9 +29,11 @@ public class MessageHandlerTest {
     public void testRSA(){
         String text="Hello My Test";
 
-        String encrypted=this.handler.encrypt(text);
-//        System.out.println(encrypted);
-        String decrypted=this.handler.decrypt(encrypted);
+        String testPriv="MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIZNf7m4KMr5JDR4iSEa2/oKtiaR65fzlA9X3IsoveV+9RSsZhebwzsWDUY66Qkh1HHDeWS/encp5dsaDhXK+Q97LllFNJCfegJYQMk4hD1giz5/HCfKyakFSEV66KkNlaV0G51z5prMF/aSWkSjpU7OavGV7c0ZwJ7NoPugbyhNAgMBAAECgYAIpVaSoytlHbLZ+eSCEBOXPjdJtl0fVBv0/OgCwWWwL4MhiJOt82YXGK1UFxjHcLkXdckL1lPQ9g6JE11Sw9VStGhJUI/KAtcWyIlHgDQeiAswn0G6yF7kTlia4+1641sX5xl6Bxta+8l28C00myFvmszwVJiPgJ8zhFhISgDi1QJBAOTzoG4DaoaFMSbWl5DUJtQXEp/bRIFNVx7TvHgGxfVme6uOAsjwGqJJGWDUT3S8fbXypOkGXk6+mFfssqlf64cCQQCWK1OjnAdLrUz/p7gWgjtPPyjAGrgUDFQCbuC4GtBqZ2VbffEJqGcYPrXGS/Z/bSva+GHw3rBvdoSyhAH0YQqLAkAYrm7YDUQ5ljgzQKT8NvKsoIQgeYnMCqNermK96bUDfHXOi7OfJ8snPYwf1SNvqTZAHBVNDaOzB3by25BzE+UXAkBjhCz2ZMU08pDvb4+AYye42atAu7Q3nP/jaOVFPIfXq9OwsSKWeuJvX8eItPiS8583ipklTf5wr4M65l6BO/oHAkEAmACr4Iqt9mtEmplPk721zrfEZ+VI4Wic3zAjdYtWIzTllTiLAVPZMhrAJCbNujP8CwWOiqLBq2M/kAwjq39Y9w==";
+        String testPub="MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCGTX+5uCjK+SQ0eIkhGtv6CrYmkeuX85QPV9yLKL3lfvUUrGYXm8M7Fg1GOukJIdRxw3lkv3p3KeXbGg4VyvkPey5ZRTSQn3oCWEDJOIQ9YIs+fxwnysmpBUhFeuipDZWldBudc+aazBf2klpEo6VOzmrxle3NGcCezaD7oG8oTQIDAQAB";
+
+        String encrypted=this.handler.encrypt(text,testPub);
+        String decrypted=this.handler.decrypt(encrypted,testPriv);
         Assertions.assertEquals(text,decrypted);
     }
 }
