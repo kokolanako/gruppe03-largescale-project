@@ -3,7 +3,6 @@ package client;
 import javax.net.SocketFactory;
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
 
 import communication.Message;
 import org.json.*;
@@ -72,10 +71,24 @@ public class Client {
         System.out.println("Message send");
 
         System.out.println("Waiting for answerMessage");
-        Message answer = (Message) objectInputStream.readObject();
+        Message answer = waitOnServerAnswer("ASK_PUBLIC_KEY");
         System.out.println("Answer received");
         System.out.println(answer.getTYPE() + " " + answer.getPublicKey());
         return answer.getPublicKey();
+    }
+
+    private Message waitOnServerAnswer(String type) throws IOException, ClassNotFoundException {
+        while (true) {
+            Message answer = (Message) objectInputStream.readObject();
+            if (answer.getTYPE().equals(type)) {
+                return answer;
+            } else {
+                if (answer.getTYPE().equals("MESSAGE")) {
+                    System.out.println("Received Message");
+                    //TODO logging message
+                }
+            }
+        }
     }
 
     private void sendName(String name, String messageText) {
@@ -111,7 +124,7 @@ public class Client {
         System.out.println("Message send");
 
         System.out.println("Waiting for answerMessage");
-        Message answerMessage = (Message) objectInputStream.readObject();
+        Message answerMessage = waitOnServerAnswer("OK");
         System.out.println("Answer received");
         System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
         //TODO Beachte Timeout und Retry, wenn Server throw Exception.
@@ -177,7 +190,7 @@ public class Client {
         message.setTYPE("CLOSE_CONNECTION");
         objectOutputStream.writeObject(message);
         objectOutputStream.flush();
-        Message answer = (Message) objectInputStream.readObject();
+        Message answer = waitOnServerAnswer("OK");
         System.out.println(answer.getTYPE() + " " + answer.getMessageText());
     }
 }
