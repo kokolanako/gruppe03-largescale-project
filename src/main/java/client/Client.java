@@ -57,8 +57,8 @@ public class Client {
         message.setTYPE("REGISTER");
         message.setId(((JSONObject) jsonObject.get("person")).getString("id"));
         String[] name = (((JSONObject) jsonObject.get("person")).getString("name")).split(",");
-        message.setLastName(name[0]);
-        message.setFirstName(name[1]);
+        message.setLastName(name[0].trim().toLowerCase());
+        message.setFirstName(name[1].trim().toLowerCase());
         message.setPublicKey(((JSONObject) ((JSONObject) jsonObject.get("person")).get("keys")).getString("public"));
         message.setMessageText("");
         return message;
@@ -84,6 +84,9 @@ public class Client {
             //get public key of receiver
             Message askKeyMessage = new Message();
             String[] splitName = name.split(",");
+            splitName[0]=splitName[0].toLowerCase();
+            splitName[1]=splitName[1].toLowerCase();
+
             askKeyMessage.setLastName(splitName[0].trim());
             askKeyMessage.setFirstName(splitName[1].trim());
             String publicKey = getReceiverPublicKey(askKeyMessage);
