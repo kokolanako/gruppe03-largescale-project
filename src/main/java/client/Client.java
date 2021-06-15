@@ -39,6 +39,7 @@ public class Client {
 
         //create message for registration
         Message message = createRegistrationMessage();
+
         //send to server
         System.out.println("Start sending Message");
         objectOutputStream.writeObject(message); //switched message and objectoutputstream //todo: soll ein dataOutputstream erzeugt werden
@@ -64,6 +65,11 @@ public class Client {
     }
 
     private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         message.setTYPE("ASK_PUBLIC_KEY");
         System.out.println("Start sending ASK_PUBLIC_KEY_Message");
         this.objectOutputStream.writeObject(message);
