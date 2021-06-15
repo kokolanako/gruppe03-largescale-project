@@ -84,8 +84,8 @@ public class Client {
             //get public key of receiver
             Message askKeyMessage = new Message();
             String[] splitName = name.split(",");
-            splitName[0]=splitName[0].toLowerCase();
-            splitName[1]=splitName[1].toLowerCase();
+            splitName[0] = splitName[0].toLowerCase();
+            splitName[1] = splitName[1].toLowerCase();
 
             askKeyMessage.setLastName(splitName[0].trim());
             askKeyMessage.setFirstName(splitName[1].trim());
@@ -96,26 +96,47 @@ public class Client {
             sendMessage = createSendMessage(messageText, publicKey);
             sendMessage.setLastName(splitName[0]);
             sendMessage.setFirstName(splitName[1]);
+            sendMessage(sendMessage);
 
-
-            //send message to receiver
-            System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " Start sending Message");
-            objectOutputStream.writeObject(sendMessage);
-            objectOutputStream.flush();
-            System.out.println("Message send");
-
-            System.out.println("Waiting for answerMessage");
-            Message answerMessage = (Message) objectInputStream.readObject();
-            System.out.println("Answer received");
-            System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
-            //TODO Beachte Timeout und Retry, wenn Server throw Exception.
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
+    private void sendMessage(Message message) throws IOException, ClassNotFoundException {
+        //send message to receiver
+        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " Start sending Message");
+        objectOutputStream.writeObject(message);
+        objectOutputStream.flush();
+        System.out.println("Message send");
+
+        System.out.println("Waiting for answerMessage");
+        Message answerMessage = (Message) objectInputStream.readObject();
+        System.out.println("Answer received");
+        System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
+        //TODO Beachte Timeout und Retry, wenn Server throw Exception.
+    }
+
     private void sendID(String id, String messageText) {
-        //TODO Aktion an Server schicken.
+        try {
+
+            //get public key of receiver
+            Message askKeyMessage = new Message();
+            askKeyMessage.setId(id);
+            String publicKey = getReceiverPublicKey(askKeyMessage);
+
+            //encrypt message
+            Message sendMessage;
+            sendMessage = createSendMessage(messageText, publicKey);
+            sendMessage.setId(id);
+
+            sendMessage(sendMessage);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
         // Beachte Timeout und Retry.
     }
 
