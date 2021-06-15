@@ -19,11 +19,11 @@ public class MessageHandler {
 
     //https://www.programcreek.com/java-api-examples/?api=java.security.spec.EncodedKeySpec
 
-    private final String ALGORITHM = "RSA";
+    private static final String ALGORITHM = "RSA";
 
 
 
-    public void generateKeyPair() {
+    public static void generateKeyPair() {
         KeyPairGenerator keyGen = null;
 
         try {
@@ -41,11 +41,11 @@ public class MessageHandler {
         System.out.println("code generated Public: " + pubStringBase64);
     }
 
-    public String encrypt(String clearText, String recipientPublicKeyBase64) {
+    public static String encrypt(String clearText, String recipientPublicKeyBase64) {
         byte[] publicKeyBytes = Base64.getDecoder().decode(recipientPublicKeyBase64);
         PublicKey publicKey = null;
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance(this.ALGORITHM);
+            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
             EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
             publicKey = keyFactory.generatePublic(publicKeySpec);
 
@@ -59,7 +59,7 @@ public class MessageHandler {
 
         Cipher encryptCipher = null;
         try {
-            encryptCipher = Cipher.getInstance(this.ALGORITHM);
+            encryptCipher = Cipher.getInstance(ALGORITHM);
             encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey);
             byte[] secretMessageBytes = clearText.getBytes();
             byte[] encryptedMessageBytes = encryptCipher.doFinal(secretMessageBytes);
@@ -79,18 +79,18 @@ public class MessageHandler {
         return null;
     }
 
-    public String decrypt(String encryptedText, String privateKeyBase64) {
+    public static String decrypt(String encryptedText, String privateKeyBase64) {
 
         Cipher decryptCipher = null;
         PrivateKey privateKey = null;
         try {
             byte[] privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64);
-            KeyFactory keyFactory = KeyFactory.getInstance(this.ALGORITHM);
+            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
             EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
             privateKey = keyFactory.generatePrivate(privateKeySpec);
 
 
-            decryptCipher = Cipher.getInstance(this.ALGORITHM);
+            decryptCipher = Cipher.getInstance(ALGORITHM);
             decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] decryptedMessageBytes = decryptCipher.doFinal(Base64.getDecoder().decode(encryptedText.getBytes()));
             String decryptedMessage = new String(decryptedMessageBytes);
