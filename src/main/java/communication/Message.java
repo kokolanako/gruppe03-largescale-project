@@ -29,4 +29,7 @@ public class Message implements Serializable {
     @Setter
     @Getter
     private String messageText;
+    @Getter
+    @Setter
+    private int message_ID;
 }

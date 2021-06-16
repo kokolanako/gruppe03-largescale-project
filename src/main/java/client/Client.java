@@ -10,9 +10,15 @@ import org.json.*;
 
 public class Client {
     JSONObject jsonObject;
+    private int id_counter = 0;
     private Socket socket;
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
+
+    private int getNextID() {
+         this.id_counter+=1;
+         return this.id_counter;
+    }
 
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
@@ -43,17 +49,18 @@ public class Client {
         System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending Message");
         objectOutputStream.writeObject(message); //switched message and objectoutputstream //todo: soll ein dataOutputstream erzeugt werden
         objectOutputStream.flush();
-        System.out.println("Message send");
+        System.out.println("Message "+message.getMessage_ID()+" send");
 
         System.out.println("Waiting for answer");
         Message answer = (Message) objectInputStream.readObject();
         System.out.println("Answer received");
-        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+        System.out.println(answer.getMessage_ID()+" "+answer.getTYPE() + " " + answer.getMessageText());
     }
 
     private Message createRegistrationMessage() {
         Message message = new Message();
         message.setTYPE("REGISTER");
+        message.setMessage_ID(this.getNextID());
         message.setId(((JSONObject) jsonObject.get("person")).getString("id"));
         String[] name = (((JSONObject) jsonObject.get("person")).getString("name")).split(",");
         message.setLastName(name[0].trim().toLowerCase());
@@ -65,10 +72,11 @@ public class Client {
 
     private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
         message.setTYPE("ASK_PUBLIC_KEY");
+        message.setMessage_ID(this.getNextID());
         System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending ASK_PUBLIC_KEY_Message");
         this.objectOutputStream.writeObject(message);
         this.objectOutputStream.flush();
-        System.out.println("Message send");
+        System.out.println("Message "+message.getMessage_ID()+" send");
 
         System.out.println("Waiting for answerMessage");
         Message answer = waitOnServerAnswer("ASK_PUBLIC_KEY");
@@ -77,10 +85,10 @@ public class Client {
         return answer.getPublicKey();
     }
 
-    private Message waitOnServerAnswer(String type) throws IOException, ClassNotFoundException {
+    private Message waitOnServerAnswer(int id, String type) throws IOException, ClassNotFoundException {
         while (true) {
             Message answer = (Message) objectInputStream.readObject();
-            if (answer.getTYPE().equals(type)) {
+            if (answer.getMessage_ID() == id && answer.getTYPE().equals(type)) {
                 return answer;
             } else {
                 if (answer.getTYPE().equals("MESSAGE")) {
@@ -122,13 +130,14 @@ public class Client {
         System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " Start sending Message");
         objectOutputStream.writeObject(message);
         objectOutputStream.flush();
-        System.out.println("Message send");
+        System.out.println("Message "+message.getMessage_ID()+" send");
 
-        System.out.println("Waiting for answerMessage");
-        Message answerMessage = waitOnServerAnswer("OK");
-        System.out.println("Answer received");
-        System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
         //TODO Beachte Timeout und Retry, wenn Server throw Exception.
+        System.out.println("Waiting for answerMessage");
+        Message answerMessage = waitOnServerAnswer(message.getMessage_ID(), "OK");
+        System.out.println("Answer received");
+        System.out.println(answerMessage.getMessage_ID()+" "+answerMessage.getTYPE() + " " + answerMessage.getMessageText());
+
     }
 
     private void sendID(String id, String messageText) {
@@ -157,6 +166,7 @@ public class Client {
     private Message createSendMessage(String messageText, String recieverPublicKey) {
         Message message = new Message();
         message.setTYPE("MESSAGE");
+        message.setMessage_ID(this.getNextID());
         //TODO messageText verschluesseln
         String cryptedText = messageText;
         message.setMessageText(cryptedText);
@@ -189,9 +199,10 @@ public class Client {
     public void closeConnection() throws IOException, ClassNotFoundException {
         Message message = new Message();
         message.setTYPE("CLOSE_CONNECTION");
+        message.setMessage_ID(this.getNextID());
         objectOutputStream.writeObject(message);
         objectOutputStream.flush();
-        Message answer = waitOnServerAnswer("OK");
-        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+        Message answer = waitOnServerAnswer(message.getMessage_ID(), "CLOSE_CONNECTION");
+        System.out.println(answer.getMessage_ID()+" "+answer.getTYPE() + " " + answer.getMessageText());
     }
 }
