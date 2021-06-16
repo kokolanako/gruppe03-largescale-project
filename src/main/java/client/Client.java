@@ -2,7 +2,9 @@ package client;
 
 import javax.net.SocketFactory;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.util.concurrent.*;
 
 import communication.Message;
 import org.json.*;
@@ -16,8 +18,8 @@ public class Client {
     private ObjectOutputStream objectOutputStream;
 
     private int getNextID() {
-         this.id_counter+=1;
-         return this.id_counter;
+        this.id_counter += 1;
+        return this.id_counter;
     }
 
     public Client(String path) throws IOException {
@@ -49,12 +51,12 @@ public class Client {
         System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending Message");
         objectOutputStream.writeObject(message); //switched message and objectoutputstream //todo: soll ein dataOutputstream erzeugt werden
         objectOutputStream.flush();
-        System.out.println("Message "+message.getMessage_ID()+" send");
+        System.out.println("Message " + message.getMessage_ID() + " send");
 
         System.out.println("Waiting for answer");
         Message answer = (Message) objectInputStream.readObject();
         System.out.println("Answer received");
-        System.out.println(answer.getMessage_ID()+" "+answer.getTYPE() + " " + answer.getMessageText());
+        System.out.println(answer.getMessage_ID() + " " + answer.getTYPE() + " " + answer.getMessageText());
     }
 
     private Message createRegistrationMessage() {
@@ -70,32 +72,77 @@ public class Client {
         return message;
     }
 
+    private void streamOut(Message message) throws IOException {
+        this.objectOutputStream.writeObject(message);
+        this.objectOutputStream.flush();
+        System.out.println("Message " + message.getMessage_ID() + " send");
+    }
+
     private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
         message.setTYPE("ASK_PUBLIC_KEY");
         message.setMessage_ID(this.getNextID());
         System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending ASK_PUBLIC_KEY_Message");
-        this.objectOutputStream.writeObject(message);
-        this.objectOutputStream.flush();
-        System.out.println("Message "+message.getMessage_ID()+" send");
+//        this.objectOutputStream.writeObject(message);
+//        this.objectOutputStream.flush();
+//        System.out.println("Message "+message.getMessage_ID()+" send");
 
+
+        ExecutorService executor = Executors.newCachedThreadPool();
+        Callable<Message> task = new Callable<>() {
+            public Message call() throws InterruptedException, MalformedURLException, Exception {
+                streamOut(message);
+                return waitOnServerAnswer(message.getMessage_ID(), "ASK_PUBLIC_KEY");
+            }
+        };
+        int retryCounter = 0;
+        int maxRetries = Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("retries"));
+        int timeout = Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout"));
+        Message answer = null;
         System.out.println("Waiting for answerMessage");
-        Message answer = waitOnServerAnswer("ASK_PUBLIC_KEY");
-        System.out.println("Answer received");
-        System.out.println(answer.getTYPE() + " " + answer.getPublicKey());
-        return answer.getPublicKey();
+        while (retryCounter < maxRetries) {
+            Future<Message> future = executor.submit(task);
+            try {
+                answer = future.get(timeout, TimeUnit.SECONDS);
+                break;
+
+            } catch (TimeoutException ex) {
+                retryCounter++;
+                System.out.println("Timeout Occured");
+
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+                break;
+            } finally {
+                future.cancel(true);
+            }
+//        Message answer = waitOnServerAnswer(message.getMessage_ID(), "ASK_PUBLIC_KEY");
+        }
+        if (answer != null) {
+            System.out.println("Answer received");
+            System.out.println(answer.getMessage_ID() + " " + answer.getTYPE() + " " + answer.getPublicKey());
+            return answer.getPublicKey();
+        } else {
+            System.out.println("Answer not received, stop retrying");
+            return null;
+        }
     }
 
     private Message waitOnServerAnswer(int id, String type) throws IOException, ClassNotFoundException {
         while (true) {
-            Message answer = (Message) objectInputStream.readObject();
-            if (answer.getMessage_ID() == id && answer.getTYPE().equals(type)) {
-                return answer;
-            } else {
-                if (answer.getTYPE().equals("MESSAGE")) {
-                    System.out.println(((JSONObject) jsonObject.get("person")).getString("name") +
-                            " received Message from " + answer.getFirstName() + " " + answer.getLastName());
-                    //TODO logging message
+            Object in = objectInputStream.readObject();
+            if (in instanceof Message) {
+                Message answer = (Message) in;
+                if (answer.getMessage_ID() == id && answer.getTYPE().equals(type)) {
+                    return answer;
+                } else {
+                    if (answer.getTYPE().equals("MESSAGE")) {
+                        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") +
+                                " received Message from " + answer.getFirstName() + " " + answer.getLastName());
+                        //TODO logging message
+                    }
                 }
+            } else {
+                System.out.println("in is not a Message and contains " + in.toString());
             }
         }
     }
@@ -130,13 +177,13 @@ public class Client {
         System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " Start sending Message");
         objectOutputStream.writeObject(message);
         objectOutputStream.flush();
-        System.out.println("Message "+message.getMessage_ID()+" send");
+        System.out.println("Message " + message.getMessage_ID() + " send");
 
         //TODO Beachte Timeout und Retry, wenn Server throw Exception.
         System.out.println("Waiting for answerMessage");
         Message answerMessage = waitOnServerAnswer(message.getMessage_ID(), "OK");
         System.out.println("Answer received");
-        System.out.println(answerMessage.getMessage_ID()+" "+answerMessage.getTYPE() + " " + answerMessage.getMessageText());
+        System.out.println(answerMessage.getMessage_ID() + " " + answerMessage.getTYPE() + " " + answerMessage.getMessageText());
 
     }
 
@@ -203,6 +250,6 @@ public class Client {
         objectOutputStream.writeObject(message);
         objectOutputStream.flush();
         Message answer = waitOnServerAnswer(message.getMessage_ID(), "CLOSE_CONNECTION");
-        System.out.println(answer.getMessage_ID()+" "+answer.getTYPE() + " " + answer.getMessageText());
+        System.out.println(answer.getMessage_ID() + " " + answer.getTYPE() + " " + answer.getMessageText());
     }
 }
