@@ -3,12 +3,15 @@ package client;
 import javax.net.SocketFactory;
 import java.io.*;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import communication.Message;
+import lombok.SneakyThrows;
 import org.json.*;
 
 
-public class Client {
+public class Client {       //todo: RSA verschlüsselung, tls socket
     JSONObject jsonObject;
     private int id_counter = 0;
     private Socket socket;
@@ -29,6 +32,8 @@ public class Client {
                     ((JSONObject) jsonObject.get("server")).getInt("port"));
             System.out.println("Connected to Server:" + socket.getInetAddress());
 
+            disconnectAfterDuration();
+
             this.objectInputStream = new ObjectInputStream(socket.getInputStream());
             this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
@@ -38,6 +43,17 @@ public class Client {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    private void disconnectAfterDuration() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                closeConnection();
+            }
+        },Integer.parseInt(jsonObject.getJSONObject("general").getString("duration"))*1000);
     }
 
     private void register(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream) throws IOException, ClassNotFoundException {
@@ -79,7 +95,7 @@ public class Client {
         System.out.println("Message "+message.getMessage_ID()+" send");
 
         System.out.println("Waiting for answerMessage");
-        Message answer = waitOnServerAnswer("ASK_PUBLIC_KEY");
+        Message answer = waitOnServerAnswer(message.getMessage_ID(),"ASK_PUBLIC_KEY");
         System.out.println("Answer received");
         System.out.println(answer.getTYPE() + " " + answer.getPublicKey());
         return answer.getPublicKey();
@@ -163,7 +179,7 @@ public class Client {
         // Beachte Timeout und Retry.
     }
 
-    private Message createSendMessage(String messageText, String recieverPublicKey) {
+    private Message createSendMessage(String messageText, String receiverPublicKey) {
         Message message = new Message();
         message.setTYPE("MESSAGE");
         message.setMessage_ID(this.getNextID());
