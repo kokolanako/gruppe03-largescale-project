@@ -1,22 +1,22 @@
 package communication;
 
 import client.Client;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
 import java.util.concurrent.*;
 
 public class ServerCommunicater {
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
+    private Client client;
+    private Logger logger;
+
+    private int id_counter = 0;
     private int timeout;
     private int maxRetries;
     private Message serverAnswer;
-    private Client client;
-    private int id_counter = 0;
 
     public ServerCommunicater(ObjectInputStream inputStream, ObjectOutputStream outputStream, int maxRetries, int timeout, Client client) {
         this.objectOutputStream = outputStream;
@@ -24,6 +24,11 @@ public class ServerCommunicater {
         this.maxRetries = maxRetries;
         this.timeout = timeout;
         this.client = client;
+        try {
+            this.logger=new Logger(client.getName()+" logging file");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private int getNextID() {
@@ -58,12 +63,14 @@ public class ServerCommunicater {
                     if(answer.getTYPE().equals("CLOSE_CONNECTION")){
                         this.objectInputStream.close();
                         this.objectOutputStream.close();
+                        this.logger.finalalize();
                     }
                     break;
                 } else {
                     if (answer.getTYPE().equals("MESSAGE")) {
                         System.out.println(this.client.getName() + " received Message from " + answer.getFirstName() + " " + answer.getLastName());
-                        //TODO logging message
+                        //TODO Msg entschluesseln
+                        this.logger.logString("Message from "+ answer.getFirstName() + " " + answer.getLastName()+": "+answer.getMessageText());
                     } else if (answer.getTYPE().equals("ERROR")) {
                         System.out.println("Server error detected: " + answer.getMessageText());
                         this.serverAnswer = answer;

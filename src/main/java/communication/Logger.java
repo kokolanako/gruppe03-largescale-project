@@ -1,4 +1,4 @@
-package client;
+package communication;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -14,7 +14,7 @@ public class Logger {
     }
 
     void logString(String message) throws IOException {
-        fileWriter.write(message);
+        fileWriter.write(message+"\n");
     }
 
     protected void finalalize() throws IOException {

@@ -76,7 +76,7 @@ public class Client {
                 closeConnection();
             }
         }, Integer.parseInt(jsonObject.getJSONObject("general").getString("duration")) * 1000);
-    }
+    }//FIXME Internal error thrown if not all Actions done and Duration over
 
 
     private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
