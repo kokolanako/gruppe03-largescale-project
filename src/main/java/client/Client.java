@@ -8,12 +8,18 @@ import communication.Message;
 import communication.ServerCommunicater;
 import org.json.*;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+import lombok.SneakyThrows;
+
 
 public class Client {
+    private boolean connectionClosed;
     JSONObject jsonObject;
     private ServerCommunicater serverCommunicater;
 
-    public Client(String path) throws IOException {
+    public Client(String path) throws IOException { //todo: RSA verschlüsselung, tls socket
         this.jsonObject = new JSONObject(FileReader.read(path));
         try {
             //Serverconnection
@@ -28,6 +34,7 @@ public class Client {
                     Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")), this);
 
             register();
+            disconnectAfterDuration();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -37,9 +44,15 @@ public class Client {
         Message answer = this.serverCommunicater.request(createRegistrationMessage(), "OK");
         if (answer != null) {
             System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
+            this.connectionClosed = false;
         } else {
             System.out.println("Registration went wrong");
+            this.connectionClosed = true;
         }
+    }
+
+    public boolean isConnectionClosed() {
+        return connectionClosed;
     }
 
     private Message createRegistrationMessage() {
@@ -54,6 +67,17 @@ public class Client {
         return message;
     }
 
+    private void disconnectAfterDuration() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                closeConnection();
+            }
+        }, Integer.parseInt(jsonObject.getJSONObject("general").getString("duration")) * 1000);
+    }
+
 
     private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
         message.setTYPE("ASK_PUBLIC_KEY");
@@ -61,10 +85,10 @@ public class Client {
         Message answer = this.serverCommunicater.request(message, "ASK_PUBLIC_KEY");
 
         if (answer != null) {
-            System.out.println("Answer "+answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getPublicKey());
+            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getPublicKey());
             return answer.getPublicKey();
         } else {
-            System.out.println("No answer received from Server");
+            System.out.println("No public key received");
             return null;
         }
 
@@ -98,7 +122,7 @@ public class Client {
         //send message to receiver
         Message answer = this.serverCommunicater.request(message, "OK");
         if (answer != null) {
-            System.out.println("Answer "+answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
+            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
         } else {
             System.out.println("Stop now retrying");
         }
@@ -126,7 +150,7 @@ public class Client {
         // Beachte Timeout und Retry.
     }
 
-    private Message createSendMessage(String messageText, String recieverPublicKey) {
+    private Message createSendMessage(String messageText, String receiverPublicKey) {
         Message message = new Message();
         message.setTYPE("MESSAGE");
         //TODO messageText verschluesseln
@@ -154,9 +178,9 @@ public class Client {
         }
     }
 
-    public int getDuration() {
-        return ((JSONObject) this.jsonObject.get("general")).getInt("duration");
-    }
+//    public int getDuration() {
+//        return ((JSONObject) this.jsonObject.get("general")).getInt("duration");
+//    }
 
     public String getName() {
         return ((JSONObject) this.jsonObject.get("person")).getString("name");
@@ -169,6 +193,7 @@ public class Client {
         Message answer = this.serverCommunicater.request(message, "CLOSE_CONNECTION");
         if (answer != null) {
             System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
+            this.connectionClosed = true;
             System.out.println("Connection closed");
         } else {
             System.out.println("Connection not closed");

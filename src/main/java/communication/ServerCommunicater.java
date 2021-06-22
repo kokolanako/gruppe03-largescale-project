@@ -55,6 +55,10 @@ public class ServerCommunicater {
                 Message answer = (Message) in;
                 if (answer.getMessage_ID() == id && answer.getTYPE().equals(type)) {
                     this.serverAnswer = answer;
+                    if(answer.getTYPE().equals("CLOSE_CONNECTION")){
+                        this.objectInputStream.close();
+                        this.objectOutputStream.close();
+                    }
                     break;
                 } else {
                     if (answer.getTYPE().equals("MESSAGE")) {

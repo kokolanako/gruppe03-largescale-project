@@ -2,10 +2,6 @@ package communication;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 //todo: Message nur noch per referenz aufrufen
@@ -32,4 +28,9 @@ public class Message implements Serializable {
     @Getter
     @Setter
     private int message_ID;
+
+    @Override
+    public String toString(){
+        return "Message: "+TYPE;
+    }
 }
