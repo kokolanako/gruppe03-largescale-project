@@ -3,6 +3,7 @@ package client;
 import javax.net.SocketFactory;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import communication.Message;
 import communication.ServerCommunicator;
@@ -99,6 +100,7 @@ public class Client {
 
     private void sendName(String name, String messageText) {
         try {
+
             //get public key of receiver
             Message askKeyMessage = new Message();
             String[] splitName = name.split(",");
