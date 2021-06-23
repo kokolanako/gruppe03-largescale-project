@@ -15,12 +15,12 @@ import java.util.TimerTask;
 import lombok.SneakyThrows;
 
 
-public class Client {
+public class Client {       //todo: RSA verschlüsselung, tls socket
     private boolean connectionClosed;
     JSONObject jsonObject;
     private ServerCommunicator serverCommunicator;
 
-    public Client(String path) throws IOException { //todo: RSA verschlüsselung, tls socket
+    public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
         try {
             //Serverconnection
@@ -51,6 +51,18 @@ public class Client {
             this.connectionClosed = true;
         }
     }
+    private void disconnectAfterDuration() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                closeConnection();
+            }
+        },Integer.parseInt(jsonObject.getJSONObject("general").getString("duration"))*1000L);
+    }
+
+
 
     public boolean isConnectionClosed() {
         return connectionClosed;
@@ -66,17 +78,6 @@ public class Client {
         message.setPublicKey(((JSONObject) ((JSONObject) jsonObject.get("person")).get("keys")).getString("public"));
         message.setMessageText("");
         return message;
-    }
-
-    private void disconnectAfterDuration() {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @SneakyThrows
-            @Override
-            public void run() {
-                closeConnection();
-            }
-        }, Integer.parseInt(jsonObject.getJSONObject("general").getString("duration")) * 1000L);
     }
 
 
