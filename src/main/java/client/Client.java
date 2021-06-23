@@ -5,7 +5,7 @@ import java.io.*;
 import java.net.Socket;
 
 import communication.Message;
-import communication.ServerCommunicater;
+import communication.ServerCommunicator;
 import org.json.*;
 
 import java.util.Timer;
@@ -17,7 +17,7 @@ import lombok.SneakyThrows;
 public class Client {
     private boolean connectionClosed;
     JSONObject jsonObject;
-    private ServerCommunicater serverCommunicater;
+    private ServerCommunicator serverCommunicator;
 
     public Client(String path) throws IOException { //todo: RSA verschlüsselung, tls socket
         this.jsonObject = new JSONObject(FileReader.read(path));
@@ -28,7 +28,7 @@ public class Client {
                     ((JSONObject) jsonObject.get("server")).getInt("port"));
             System.out.println("Connected to Server:" + socket.getInetAddress());
 
-            this.serverCommunicater = new ServerCommunicater(new ObjectInputStream(socket.getInputStream()),
+            this.serverCommunicator = new ServerCommunicator(new ObjectInputStream(socket.getInputStream()),
                     new ObjectOutputStream(socket.getOutputStream()),
                     Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("retries")),
                     Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")), this);
@@ -41,7 +41,7 @@ public class Client {
     }
 
     private void register() throws IOException, ClassNotFoundException {
-        Message answer = this.serverCommunicater.request(createRegistrationMessage(), "OK");
+        Message answer = this.serverCommunicator.request(createRegistrationMessage(), "OK");
         if (answer != null) {
             System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
             this.connectionClosed = false;
@@ -75,14 +75,17 @@ public class Client {
             public void run() {
                 closeConnection();
             }
-        }, Integer.parseInt(jsonObject.getJSONObject("general").getString("duration")) * 1000);
-    }//FIXME Internal error thrown if not all Actions done and Duration over
+        }, Integer.parseInt(jsonObject.getJSONObject("general").getString("duration")) * 1000L);
+    }
 
 
     private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
         message.setTYPE("ASK_PUBLIC_KEY");
-
-        Message answer = this.serverCommunicater.request(message, "ASK_PUBLIC_KEY");
+        if (connectionClosed) {
+            System.out.println("Connection to Server already closed, stop key request");
+            return null;
+        }
+        Message answer = this.serverCommunicator.request(message, "ASK_PUBLIC_KEY");
 
         if (answer != null) {
             System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getPublicKey());
@@ -120,13 +123,14 @@ public class Client {
 
     private void sendMessage(Message message) throws IOException, ClassNotFoundException {
         //send message to receiver
-        Message answer = this.serverCommunicater.request(message, "OK");
-        if (answer != null) {
-            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
-        } else {
-            System.out.println("Stop now retrying");
+        if (!connectionClosed) {
+            Message answer = this.serverCommunicator.request(message, "OK");
+            if (answer != null) {
+                System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
+            } else {
+                System.out.println("Stop now retrying");
+            }
         }
-
     }
 
     private void sendID(String id, String messageText) {
@@ -163,6 +167,9 @@ public class Client {
     public void runAllActions() {
         for (Object action : (JSONArray) jsonObject.get("actions")
         ) {
+            if (connectionClosed) {
+                break;
+            }
             String[] splitAction = action.toString().split("\\[");
             if (splitAction.length == 3) {
                 if (splitAction[0].trim().equals("SEND")) {
@@ -178,10 +185,6 @@ public class Client {
         }
     }
 
-//    public int getDuration() {
-//        return ((JSONObject) this.jsonObject.get("general")).getInt("duration");
-//    }
-
     public String getName() {
         return ((JSONObject) this.jsonObject.get("person")).getString("name");
     }
@@ -190,7 +193,7 @@ public class Client {
         Message message = new Message();
         message.setTYPE("CLOSE_CONNECTION");
 
-        Message answer = this.serverCommunicater.request(message, "CLOSE_CONNECTION");
+        Message answer = this.serverCommunicator.request(message, "CLOSE_CONNECTION");
         if (answer != null) {
             System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
             this.connectionClosed = true;

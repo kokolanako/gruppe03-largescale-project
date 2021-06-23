@@ -22,24 +22,19 @@ public class ApplicationStarter {
                     if(!client.isConnectionClosed()){
                         client.runAllActions();
                     }
-                    while(true){
-                        if(client.isConnectionClosed()){
-                            clientArrayList.remove(client);
-                            break;
-                        }
-                    }
                 });
                 threadArrayList.add(thread);
                 thread.start();
             }
             while(true){
+                clientArrayList.removeIf(Client::isConnectionClosed);
                 if (clientArrayList.isEmpty()){
                     for (Thread thread:threadArrayList
                          ) {
-                        thread.join();
+                        thread.join(10);
                     }
-                    //FIXME whyever it just work with debugging and breakpoint at row 27
                     System.exit(0);
+                    break;
                 }
             }
 
