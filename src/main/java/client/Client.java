@@ -81,11 +81,10 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
     }
 
 
-    private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
+    private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException, NoKeyException {
         message.setTYPE("ASK_PUBLIC_KEY");
         if (connectionClosed) {
-            System.out.println("Connection to Server already closed, stop key request");
-            return null;
+            throw new NoKeyException("Connection to Server already closed, stop key request");
         }
         Message answer = this.serverCommunicator.request(message, "ASK_PUBLIC_KEY");
 
@@ -93,10 +92,8 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
             System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getPublicKey());
             return answer.getPublicKey();
         } else {
-            System.out.println("No public key received");
-            return null;
+            throw new NoKeyException("No public key received");
         }
-
     }
 
     private void sendName(String name, String messageText) {
@@ -110,15 +107,18 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
 
             askKeyMessage.setLastName(splitName[0]);
             askKeyMessage.setFirstName(splitName[1]);
-            String publicKey = getReceiverPublicKey(askKeyMessage);
+            try {
+                String publicKey = getReceiverPublicKey(askKeyMessage); //Todo: Error : wieso kann es vorkommen, dass es keinen KEY gibt (==null)
 
-            //encrypt message
-            Message sendMessage;
-            sendMessage = createSendMessage(messageText, publicKey);
-            sendMessage.setLastName(splitName[0]);
-            sendMessage.setFirstName(splitName[1]);
-            sendMessage(sendMessage);
-
+                //encrypt message
+                Message sendMessage;
+                sendMessage = createSendMessage(messageText, publicKey);
+                sendMessage.setLastName(splitName[0]);
+                sendMessage.setFirstName(splitName[1]);
+                sendMessage(sendMessage);
+            }catch (NoKeyException e){
+                e.printStackTrace();
+            }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -142,15 +142,18 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
             //get public key of receiver
             Message askKeyMessage = new Message();
             askKeyMessage.setId(id);
-            String publicKey = getReceiverPublicKey(askKeyMessage);
+            try {
+                String publicKey = getReceiverPublicKey(askKeyMessage);
 
-            //encrypt message
-            Message sendMessage;
-            sendMessage = createSendMessage(messageText, publicKey);
-            sendMessage.setId(id);
+                //encrypt message
+                Message sendMessage;
+                sendMessage = createSendMessage(messageText, publicKey);
+                sendMessage.setId(id);
 
-            sendMessage(sendMessage);
-
+                sendMessage(sendMessage);
+            }catch (NoKeyException e){
+                e.printStackTrace();
+            }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
