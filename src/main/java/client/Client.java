@@ -32,7 +32,7 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
             this.serverCommunicator = new ServerCommunicator(new ObjectInputStream(socket.getInputStream()),
                     new ObjectOutputStream(socket.getOutputStream()),
                     Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("retries")),
-                    Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")), this);
+                    Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")), this, jsonObject.getJSONObject("person").getJSONObject("keys").getString("private"));
 
             register();
             disconnectAfterDuration();
@@ -160,10 +160,7 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
     private Message createSendMessage(String messageText, String receiverPublicKey) {
         Message message = new Message();
         message.setTYPE("MESSAGE");
-        //TODO messageText verschluesseln
-        String cryptedText = messageText;
-        message.setMessageText(cryptedText);
-
+        message.setMessageText(MessageHandler.encrypt(messageText, receiverPublicKey));
         return message;
     }
 

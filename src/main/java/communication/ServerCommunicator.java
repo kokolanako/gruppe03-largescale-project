@@ -1,6 +1,7 @@
 package communication;
 
 import client.Client;
+import client.MessageHandler;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -20,12 +21,14 @@ public class ServerCommunicator {
     private final int maxRetries;
     private Message serverAnswer;
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+    String privateKey;
 
-    public ServerCommunicator(ObjectInputStream inputStream, ObjectOutputStream outputStream, int maxRetries, int timeout, Client client) {
+    public ServerCommunicator(ObjectInputStream inputStream, ObjectOutputStream outputStream, int maxRetries, int timeout, Client client, String privateKey) {
         this.objectOutputStream = outputStream;
         this.objectInputStream = inputStream;
         this.maxRetries = maxRetries;
         this.timeout = timeout;
+        this.privateKey = privateKey;
         this.client = client;
         try {
             this.logger = new Logger(client.getName() + " inbox");
@@ -106,9 +109,11 @@ public class ServerCommunicator {
                     } else {
                         if (answer.getTYPE().equals("MESSAGE")) {
                             System.out.println(this.client.getName() + " received Message from " + answer.getFirstName() + " " + answer.getLastName());
-                            //TODO Msg entschluesseln
+
+                            var messageText = MessageHandler.decrypt(answer.getMessageText(), privateKey);
+
                             LocalDateTime now = LocalDateTime.now();
-                            this.logger.logString("Message from " + answer.getFirstName() + " " + answer.getLastName() + " at "+this.dtf.format(now)+": " + answer.getMessageText());
+                            this.logger.logString("Message from " + answer.getFirstName() + " " + answer.getLastName() + " at "+this.dtf.format(now)+": " + messageText);
                         } else if (answer.getTYPE().equals("ERROR")) {
                             System.out.println("Server error detected: " + answer.getMessageText());
                             this.serverAnswer = answer;
