@@ -15,7 +15,7 @@ import java.util.TimerTask;
 import lombok.SneakyThrows;
 
 
-public class Client {       //todo: RSA verschlüsselung, tls socket
+public class Client {       //todo: tls socket
     private boolean connectionClosed;
     JSONObject jsonObject;
     private ServerCommunicator serverCommunicator;
@@ -32,7 +32,8 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
             this.serverCommunicator = new ServerCommunicator(new ObjectInputStream(socket.getInputStream()),
                     new ObjectOutputStream(socket.getOutputStream()),
                     Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("retries")),
-                    Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")), this, jsonObject.getJSONObject("person").getJSONObject("keys").getString("private"));
+                    Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")),
+                    this, jsonObject.getJSONObject("person").getJSONObject("keys").getString("private"));
 
             register();
             disconnectAfterDuration();
@@ -44,7 +45,8 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
     private void register() throws IOException, ClassNotFoundException {
         Message answer = this.serverCommunicator.request(createRegistrationMessage(), "OK");
         if (answer != null) {
-            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
+            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                    + answer.getMessageText());
             this.connectionClosed = false;
         } else {
             System.out.println("Registration went wrong");
@@ -89,7 +91,8 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
         Message answer = this.serverCommunicator.request(message, "ASK_PUBLIC_KEY");
 
         if (answer != null) {
-            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getPublicKey());
+            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                    + answer.getPublicKey());
             return answer.getPublicKey();
         } else {
             throw new NoKeyException("No public key received");
@@ -108,7 +111,7 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
             askKeyMessage.setLastName(splitName[0]);
             askKeyMessage.setFirstName(splitName[1]);
             try {
-                String publicKey = getReceiverPublicKey(askKeyMessage); //Todo: Error : wieso kann es vorkommen, dass es keinen KEY gibt (==null)
+                String publicKey = getReceiverPublicKey(askKeyMessage);
 
                 //encrypt message
                 Message sendMessage;
@@ -117,7 +120,9 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
                 sendMessage.setFirstName(splitName[1]);
                 sendMessage(sendMessage);
             }catch (NoKeyException e){
-                e.printStackTrace();
+                System.out.println("Can not get key from "+askKeyMessage.getFirstName()+" "+askKeyMessage.getLastName()
+                        +", maybe (s)he does not exist");
+               // e.printStackTrace();
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -129,7 +134,8 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
         if (!connectionClosed) {
             Message answer = this.serverCommunicator.request(message, "OK");
             if (answer != null) {
-                System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
+                System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                        + answer.getMessageText());
             } else {
                 System.out.println("Stop now retrying");
             }
@@ -152,7 +158,7 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
 
                 sendMessage(sendMessage);
             }catch (NoKeyException e){
-                e.printStackTrace();
+                System.out.println("Can not get key from "+askKeyMessage.getId()+", maybe (s)he does not exist");
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -164,6 +170,7 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
         Message message = new Message();
         message.setTYPE("MESSAGE");
         message.setMessageText(MessageHandler.encrypt(messageText, receiverPublicKey));
+
         return message;
     }
 
@@ -198,7 +205,8 @@ public class Client {       //todo: RSA verschlüsselung, tls socket
 
         Message answer = this.serverCommunicator.request(message, "CLOSE_CONNECTION");
         if (answer != null) {
-            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " " + answer.getMessageText());
+            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                    + answer.getMessageText());
             this.connectionClosed = true;
             System.out.println("Connection closed");
         } else {
