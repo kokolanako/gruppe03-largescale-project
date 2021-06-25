@@ -6,51 +6,68 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import communication.Message;
+import communication.ServerCommunicator;
 import org.json.*;
 
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class Client {
+import lombok.SneakyThrows;
+
+
+public class Client {       //todo: tls socket
+    private boolean connectionClosed;
     JSONObject jsonObject;
-    private Socket socket;
-    private ObjectInputStream objectInputStream;
-    private ObjectOutputStream objectOutputStream;
+    private ServerCommunicator serverCommunicator;
 
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
         try {
             //Serverconnection
-            this.socket = SocketFactory.getDefault().createSocket(
+            Socket socket = SocketFactory.getDefault().createSocket(
                     ((JSONObject) jsonObject.get("server")).getString("ip"),
                     ((JSONObject) jsonObject.get("server")).getInt("port"));
             System.out.println("Connected to Server:" + socket.getInetAddress());
 
-            this.objectInputStream = new ObjectInputStream(socket.getInputStream());
-            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            this.serverCommunicator = new ServerCommunicator(new ObjectInputStream(socket.getInputStream()),
+                    new ObjectOutputStream(socket.getOutputStream()),
+                    Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("retries")),
+                    Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")),
+                    this, jsonObject.getJSONObject("person").getJSONObject("keys").getString("private"));
 
-            register(objectInputStream, objectOutputStream);
-
-            System.out.println("Client " + ((JSONObject) jsonObject.get("person")).getString("name") + " created and registered");
+            register();
+            disconnectAfterDuration();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    private void register(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream) throws IOException, ClassNotFoundException {
-        //objectInputStream enthaelt ACK wenn erfolgreich else Fehlermeldung
+    private void register() throws IOException, ClassNotFoundException {
+        Message answer = this.serverCommunicator.request(createRegistrationMessage(), "OK");
+        if (answer != null) {
+            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                    + answer.getMessageText());
+            this.connectionClosed = false;
+        } else {
+            System.out.println("Registration went wrong");
+            this.connectionClosed = true;
+        }
+    }
+    private void disconnectAfterDuration() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                closeConnection();
+            }
+        },Integer.parseInt(jsonObject.getJSONObject("general").getString("duration"))*1000L);
+    }
 
-        //create message for registration
-        Message message = createRegistrationMessage();
 
-        //send to server
-        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending Message");
-        objectOutputStream.writeObject(message); //switched message and objectoutputstream //todo: soll ein dataOutputstream erzeugt werden
-        objectOutputStream.flush();
-        System.out.println("Message send");
 
-        System.out.println("Waiting for answer");
-        Message answer = (Message) objectInputStream.readObject();
-        System.out.println("Answer received");
-        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+    public boolean isConnectionClosed() {
+        return connectionClosed;
     }
 
     private Message createRegistrationMessage() {
@@ -65,23 +82,21 @@ public class Client {
         return message;
     }
 
-    private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        message.setTYPE("ASK_PUBLIC_KEY");
-        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " start sending ASK_PUBLIC_KEY_Message");
-        this.objectOutputStream.writeObject(message);
-        this.objectOutputStream.flush();
-        System.out.println("Message send");
 
-        System.out.println("Waiting for answerMessage");
-        Message answer = (Message) objectInputStream.readObject();
-        System.out.println("Answer received");
-        System.out.println(answer.getTYPE() + " " + answer.getPublicKey());
-        return answer.getPublicKey();
+    private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException, NoKeyException {
+        message.setTYPE("ASK_PUBLIC_KEY");
+        if (connectionClosed) {
+            throw new NoKeyException("Connection to Server already closed, stop key request");
+        }
+        Message answer = this.serverCommunicator.request(message, "ASK_PUBLIC_KEY");
+
+        if (answer != null) {
+            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                    + answer.getPublicKey());
+            return answer.getPublicKey();
+        } else {
+            throw new NoKeyException("No public key received");
+        }
     }
 
     private void sendName(String name, String messageText) {
@@ -90,20 +105,25 @@ public class Client {
             //get public key of receiver
             Message askKeyMessage = new Message();
             String[] splitName = name.split(",");
-            splitName[0] = splitName[0].toLowerCase();
-            splitName[1] = splitName[1].toLowerCase();
+            splitName[0] = splitName[0].toLowerCase().trim();
+            splitName[1] = splitName[1].toLowerCase().trim();
 
-            askKeyMessage.setLastName(splitName[0].trim());
-            askKeyMessage.setFirstName(splitName[1].trim());
-            String publicKey = getReceiverPublicKey(askKeyMessage);
+            askKeyMessage.setLastName(splitName[0]);
+            askKeyMessage.setFirstName(splitName[1]);
+            try {
+                String publicKey = getReceiverPublicKey(askKeyMessage);
 
-            //encrypt message
-            Message sendMessage;
-            sendMessage = createSendMessage(messageText, publicKey);
-            sendMessage.setLastName(splitName[0]);
-            sendMessage.setFirstName(splitName[1]);
-            sendMessage(sendMessage);
-
+                //encrypt message
+                Message sendMessage;
+                sendMessage = createSendMessage(messageText, publicKey);
+                sendMessage.setLastName(splitName[0]);
+                sendMessage.setFirstName(splitName[1]);
+                sendMessage(sendMessage);
+            }catch (NoKeyException e){
+                System.out.println("Can not get key from "+askKeyMessage.getFirstName()+" "+askKeyMessage.getLastName()
+                        +", maybe (s)he does not exist");
+               // e.printStackTrace();
+            }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -111,16 +131,15 @@ public class Client {
 
     private void sendMessage(Message message) throws IOException, ClassNotFoundException {
         //send message to receiver
-        System.out.println(((JSONObject) jsonObject.get("person")).getString("name") + " Start sending Message");
-        objectOutputStream.writeObject(message);
-        objectOutputStream.flush();
-        System.out.println("Message send");
-
-        System.out.println("Waiting for answerMessage");
-        Message answerMessage = (Message) objectInputStream.readObject();
-        System.out.println("Answer received");
-        System.out.println(answerMessage.getTYPE() + " " + answerMessage.getMessageText());
-        //TODO Beachte Timeout und Retry, wenn Server throw Exception.
+        if (!connectionClosed) {
+            Message answer = this.serverCommunicator.request(message, "OK");
+            if (answer != null) {
+                System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                        + answer.getMessageText());
+            } else {
+                System.out.println("Stop now retrying");
+            }
+        }
     }
 
     private void sendID(String id, String messageText) {
@@ -129,29 +148,28 @@ public class Client {
             //get public key of receiver
             Message askKeyMessage = new Message();
             askKeyMessage.setId(id);
-            String publicKey = getReceiverPublicKey(askKeyMessage);
+            try {
+                String publicKey = getReceiverPublicKey(askKeyMessage);
 
-            //encrypt message
-            Message sendMessage;
-            sendMessage = createSendMessage(messageText, publicKey);
-            sendMessage.setId(id);
+                //encrypt message
+                Message sendMessage;
+                sendMessage = createSendMessage(messageText, publicKey);
+                sendMessage.setId(id);
 
-            sendMessage(sendMessage);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+                sendMessage(sendMessage);
+            }catch (NoKeyException e){
+                System.out.println("Can not get key from "+askKeyMessage.getId()+", maybe (s)he does not exist");
+            }
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         // Beachte Timeout und Retry.
     }
 
-    private Message createSendMessage(String messageText, String recieverPublicKey) {
+    private Message createSendMessage(String messageText, String receiverPublicKey) {
         Message message = new Message();
         message.setTYPE("MESSAGE");
-        //TODO messageText verschluesseln
-        String cryptedText = messageText;
-        message.setMessageText(cryptedText);
+        message.setMessageText(MessageHandler.encrypt(messageText, receiverPublicKey));
 
         return message;
     }
@@ -159,6 +177,9 @@ public class Client {
     public void runAllActions() {
         for (Object action : (JSONArray) jsonObject.get("actions")
         ) {
+            if (connectionClosed) {
+                break;
+            }
             String[] splitAction = action.toString().split("\\[");
             if (splitAction.length == 3) {
                 if (splitAction[0].trim().equals("SEND")) {
@@ -174,16 +195,22 @@ public class Client {
         }
     }
 
-    public int getDuration() {
-        return ((JSONObject) this.jsonObject.get("general")).getInt("duration");
+    public String getName() {
+        return ((JSONObject) this.jsonObject.get("person")).getString("name");
     }
 
-    public void closeConnection() throws IOException, ClassNotFoundException {
+    public void closeConnection() {
         Message message = new Message();
         message.setTYPE("CLOSE_CONNECTION");
-        objectOutputStream.writeObject(message);
-        objectOutputStream.flush();
-        Message answer = (Message) objectInputStream.readObject();
-        System.out.println(answer.getTYPE() + " " + answer.getMessageText());
+
+        Message answer = this.serverCommunicator.request(message, "CLOSE_CONNECTION");
+        if (answer != null) {
+            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                    + answer.getMessageText());
+            this.connectionClosed = true;
+            System.out.println("Connection closed");
+        } else {
+            System.out.println("Connection not closed");
+        }
     }
 }

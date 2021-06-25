@@ -21,6 +21,6 @@ public class FileReader {
             }
         }
         System.out.print("\n");
-        return text;
+            return text;
     }
 }
