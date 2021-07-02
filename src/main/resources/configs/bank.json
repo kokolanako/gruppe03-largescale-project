@@ -17,8 +17,7 @@
         "iban": "DE0355667",
         "amount": "3000",
         "roles": [
-          "SUB",
-          "ADD"
+          "CUSTOMER"
         ]
 
       },
@@ -27,8 +26,7 @@
         "iban": "DE0355667",
         "amount": "3000",
         "roles": [
-          "SUB",
-          "ADD"
+          "CUSTOMER"
         ]
 
       }
