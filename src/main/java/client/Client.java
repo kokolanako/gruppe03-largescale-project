@@ -45,7 +45,7 @@ public class Client {       //todo: tls socket
     private void register() throws IOException, ClassNotFoundException {
         Message answer = this.serverCommunicator.request(createRegistrationMessage(), "OK");
         if (answer != null) {
-            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+            System.out.println("Answer in thread: "+Thread.currentThread().getName()+" " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
                     + answer.getMessageText());
             this.connectionClosed = false;
         } else {
@@ -91,7 +91,7 @@ public class Client {       //todo: tls socket
         Message answer = this.serverCommunicator.request(message, "ASK_PUBLIC_KEY");
 
         if (answer != null) {
-            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+            System.out.println("Answer in Thread "+Thread.currentThread().getName()+" " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
                     + answer.getPublicKey());
             return answer.getPublicKey();
         } else {
@@ -134,7 +134,7 @@ public class Client {       //todo: tls socket
         if (!connectionClosed) {
             Message answer = this.serverCommunicator.request(message, "OK");
             if (answer != null) {
-                System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                System.out.println("Answer in Thread "+Thread.currentThread().getName()+" " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
                         + answer.getMessageText());
             } else {
                 System.out.println("Stop now retrying");
@@ -205,7 +205,7 @@ public class Client {       //todo: tls socket
 
         Message answer = this.serverCommunicator.request(message, "CLOSE_CONNECTION");
         if (answer != null) {
-            System.out.println("Answer " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+            System.out.println("Answer in Thread "+Thread.currentThread().getName()+" " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
                     + answer.getMessageText());
             this.connectionClosed = true;
             System.out.println("Connection closed");

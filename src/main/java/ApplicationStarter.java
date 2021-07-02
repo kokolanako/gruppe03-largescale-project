@@ -23,6 +23,7 @@ public class ApplicationStarter {
                         client.runAllActions();
                     }
                 });
+                thread.setName("Thread "+client.getName());
                 threadArrayList.add(thread);
                 thread.start();
             }
