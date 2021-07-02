@@ -78,13 +78,15 @@ public class ServerCommunicator {
       if (!client.isConnectionClosed()) {
         this.objectOutputStream.writeObject(message);
         this.objectOutputStream.flush();
-        System.out.println("SEND: "+this.client.getName() + " send Message with id: " + message.getMessage_ID() + " with type: " + message.getTYPE());
+        System.out.println("SEND: " + this.client.getName() + " send Message with id: " + message.getMessage_ID() + " with type: " + message.getTYPE());
         System.out.println(message);
 //        System.out.println("Waiting for answerMessage");
       }
 
     } catch (SocketException e) {
-      System.out.println("The central server is disconnected from the network.");
+      String logMsg="The central server is disconnected from the network.";
+      System.out.println(logMsg);
+      this.logger.logString(logMsg);
       System.exit(1);
     }
 
@@ -101,48 +103,55 @@ public class ServerCommunicator {
   }
 
   private void waitOnServerAnswer(int id, String type) throws IOException, ClassNotFoundException {
-    while (true) {
-      if (!client.isConnectionClosed()) {
-        Object in = objectInputStream.readObject();
-        if (in instanceof Message) {
-          Message answer = (Message) in;
-          if (answer.getMessage_ID() == id && answer.getTYPE().equals(type)) {
-            this.serverAnswer = answer;
-            if (answer.getTYPE().equals("CLOSE_CONNECTION")) {
-              this.objectInputStream.close();
-              this.objectOutputStream.close();
-              this.logger.finalalize();
+    try {
+      while (true) {
+        if (!client.isConnectionClosed()) {
+          Object in = objectInputStream.readObject();
+          if (in instanceof Message) {
+            Message answer = (Message) in;
+            if (answer.getMessage_ID() == id && answer.getTYPE().equals(type)) {
+              this.serverAnswer = answer;
+              if (answer.getTYPE().equals("CLOSE_CONNECTION")) {
+                this.objectInputStream.close();
+                this.objectOutputStream.close();
+                this.logger.finalalize();
+              }
+              break;
+            } else {
+              if (answer.getTYPE().equals("MESSAGE")) {
+
+                var messageText = MessageHandler.decrypt(answer.getMessageText(), privateKey);
+                System.out.println("RECEIVED: " + this.client.getName() + " received Message from " + answer.getFirstName() + " " + answer.getLastName() + " message: " + messageText);
+
+                LocalDateTime now = LocalDateTime.now();
+                this.logger.logString("Message id" + answer.getMessage_ID() + " from " + answer.getFirstName() + " " + answer.getLastName() + " at " + this.dtf.format(now) + ": " + messageText);
+
+
+              } else if (answer.getTYPE().equals("ERROR")) {
+                System.out.println("Server error detected: " + answer.getMessageText());
+                this.serverAnswer = answer;
+                break;
+              }
+            }
+          } else {
+            System.out.println("in is not a Message");
+            if (in != null) {
+              System.out.print(" and contains " + in);
+            } else {
+              System.out.print(" and is null");
             }
             break;
-          } else {
-            if (answer.getTYPE().equals("MESSAGE")) {
-
-              var messageText = MessageHandler.decrypt(answer.getMessageText(), privateKey);
-              System.out.println("RECEIVED: " + this.client.getName() + " received Message from " + answer.getFirstName() + " " + answer.getLastName() + " message: " + messageText);
-
-              LocalDateTime now = LocalDateTime.now();
-              this.logger.logString("Message id" + answer.getMessage_ID() + " from " + answer.getFirstName() + " " + answer.getLastName() + " at " + this.dtf.format(now) + ": " + messageText);
-
-
-            } else if (answer.getTYPE().equals("ERROR")) {
-              System.out.println("Server error detected: " + answer.getMessageText());
-              this.serverAnswer = answer;
-              break;
-            }
           }
         } else {
-          System.out.println("in is not a Message");
-          if (in != null) {
-            System.out.print(" and contains " + in);
-          } else {
-            System.out.print(" and is null");
-          }
+          System.out.println("Connection to Server is closed");
           break;
         }
-      } else {
-        System.out.println("Connection to Server is closed");
-        break;
       }
+    } catch (SocketException e) {
+      System.out.println("Server has disconnected.");
+      this.logger.logString("Server has disconnected");
     }
   }
+
+
 }

@@ -20,6 +20,10 @@ public class Client {       //todo: tls socket
     JSONObject jsonObject;
     private ServerCommunicator serverCommunicator;
 
+    private String ownLastName;
+    private String ownFirstName;
+    private String id;
+
     public Client(String path) throws IOException {
         this.jsonObject = new JSONObject(FileReader.read(path));
         try {
@@ -78,10 +82,13 @@ public class Client {       //todo: tls socket
     private Message createRegistrationMessage() {
         Message message = new Message();
         message.setTYPE("REGISTER");
-        message.setId(((JSONObject) jsonObject.get("person")).getString("id"));
+        this.id=((JSONObject) jsonObject.get("person")).getString("id");
+        message.setId(id);
         String[] name = (((JSONObject) jsonObject.get("person")).getString("name")).split(",");
-        message.setLastName(name[0].trim().toLowerCase());
-        message.setFirstName(name[1].trim().toLowerCase());
+        this.ownLastName=name[0].trim().toLowerCase();
+        message.setLastName(this.ownLastName);
+        this.ownFirstName=name[1].trim().toLowerCase();
+        message.setFirstName(this.ownFirstName);
         message.setPublicKey(((JSONObject) ((JSONObject) jsonObject.get("person")).get("keys")).getString("public"));
         message.setMessageText("");
         return message;
@@ -104,9 +111,8 @@ public class Client {       //todo: tls socket
         }
     }
 
-    private void sendName(String name, String messageText) {
+    private void sendName(String name, String messageText, String messageType) {
         try {
-
             //get public key of receiver
             Message askKeyMessage = new Message();
             String[] splitName = name.split(",");
@@ -120,7 +126,7 @@ public class Client {       //todo: tls socket
 
                 //encrypt message
                 Message sendMessage;
-                sendMessage = createSendMessage(messageText, publicKey);
+                sendMessage = createSendMessage(messageText, publicKey,messageType);
                 sendMessage.setLastNameReceiver(splitName[0]);
                 sendMessage.setFirstNameReceiver(splitName[1]);
                 sendMessage(sendMessage);
@@ -139,15 +145,17 @@ public class Client {       //todo: tls socket
         if (!connectionClosed) {
             Message answer = this.serverCommunicator.request(message, "OK");
             if (answer != null) {
-                System.out.println("Answer in Thread "+Thread.currentThread().getName()+" " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
-                        + answer.getMessageText());
+              String logMsg="MESSAGE OK answer in Thread "+Thread.currentThread().getName()+" " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
+                  + answer.getMessageText();
+                System.out.println(logMsg);
+
             } else {
                 System.out.println("Stop now retrying");
             }
         }
     }
 
-    private void sendID(String id, String messageText) {
+    private void sendID(String id, String messageText, String messageType) {
         try {
 
             //get public key of receiver
@@ -158,7 +166,7 @@ public class Client {       //todo: tls socket
 
                 //encrypt message
                 Message sendMessage;
-                sendMessage = createSendMessage(messageText, publicKey);
+                sendMessage = createSendMessage(messageText, publicKey,messageType);
                 sendMessage.setIdReceiver(id);
 
                 sendMessage(sendMessage);
@@ -171,11 +179,13 @@ public class Client {       //todo: tls socket
         // Beachte Timeout und Retry.
     }
 
-    private Message createSendMessage(String messageText, String receiverPublicKey) {
+    private Message createSendMessage(String messageText, String receiverPublicKey, String messageType) {
         Message message = new Message();
-        message.setTYPE("MESSAGE");
+        message.setTYPE(messageType);
+        message.setLastName(this.ownLastName);
+        message.setFirstName(this.ownFirstName);
+        message.setId(this.id);
         message.setMessageText(MessageHandler.encrypt(messageText, receiverPublicKey));
-
         return message;
     }
 
@@ -186,14 +196,22 @@ public class Client {       //todo: tls socket
                 break;
             }
             String[] splitAction = action.toString().split("\\[");
-            if (splitAction.length == 3) {
+            if (splitAction.length == 4) {
                 if (splitAction[0].trim().equals("SEND")) {
+                    String messageType = splitAction[3].trim().substring(0, splitAction[3].trim().length() - 1);
                     String message = splitAction[2].trim().substring(0, splitAction[2].trim().length() - 1);
-                    String reciever = splitAction[1].trim().substring(0, splitAction[1].trim().length() - 1);
-                    if (reciever.contains(",")) {
-                        sendName(reciever, message);
+                    String receiver = splitAction[1].trim().substring(0, splitAction[1].trim().length() - 1);
+                  System.out.println("*********************");
+                  System.out.println(message+"  "+receiver+" "+messageType);
+                  String actualMessageType="MESSAGE";
+                  if(messageType.equals("BUSINESS")){
+                    actualMessageType= "MESSAGE_BUSINESS";
+                  }else if(messageType.equals("PRIVATE")){
+                    actualMessageType="MESSAGE_PRIVATE";        }
+                    if (receiver.contains(",")) {
+                        sendName(receiver, message,actualMessageType);
                     } else {
-                        sendID(reciever, message);
+                        sendID(receiver, message,actualMessageType);
                     }
                 }
             }
