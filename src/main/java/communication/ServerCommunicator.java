@@ -2,6 +2,7 @@ package communication;
 
 import client.Client;
 import client.MessageHandler;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,6 +16,7 @@ public class ServerCommunicator {
   private ObjectInputStream objectInputStream;
   private ObjectOutputStream objectOutputStream;
   private Client client;
+  @Getter
   private Logger logger;
 
   private int id_counter = 0;
@@ -127,8 +129,8 @@ public class ServerCommunicator {
                 this.logger.logString("Message id" + answer.getMessage_ID() + " from " + answer.getFirstName() + " " + answer.getLastName() + " at " + this.dtf.format(now) + ": " + messageText);
 
 
-              } else if (answer.getTYPE().equals("ERROR")) {
-                System.out.println("Server error detected: " + answer.getMessageText());
+              } else if (answer.getTYPE().equals("ERROR")) { //TODO e.g Unknown Roles versucht trotzdem zu schicken ??? ist es so gewollt?
+                System.out.println("Server error detected for msg-ID: : "+answer.getMessage_ID()+" Error message: " + answer.getMessageText());
                 this.serverAnswer = answer;
                 break;
               }

@@ -10,6 +10,8 @@ public class ApplicationStarter {
     public static void main(String[] args) throws IOException {
         String path1 = "src/main/resources/configs/config_1.json";
         String path2 = "src/main/resources/configs/config_2.json";
+        //TODO parse bank
+      String path3 = "src/main/resources/configs/bank.json"; //TODO in message set typeInstance(ORGANIZATION)
         try {
             ArrayList<Client> clientArrayList=new ArrayList<>();
             ArrayList<Thread> threadArrayList=new ArrayList<>();

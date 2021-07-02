@@ -13,7 +13,7 @@ public class Logger {
 
     }
 
-    void logString(String message) throws IOException {
+    public void logString(String message) throws IOException {
         fileWriter.write(message+"\n");
     }
 
