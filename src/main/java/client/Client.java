@@ -48,6 +48,11 @@ public class Client {       //todo: tls socket
             System.out.println("Answer in thread: "+Thread.currentThread().getName()+" " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
                     + answer.getMessageText());
             this.connectionClosed = false;
+          try {
+            Thread.sleep(3000); // to wait until other client thread registers TT##//TODO otherwise null for public Key of receiver todo: try to send message multiple times
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
         } else {
             System.out.println("Registration went wrong");
             this.connectionClosed = true;
@@ -108,19 +113,19 @@ public class Client {       //todo: tls socket
             splitName[0] = splitName[0].toLowerCase().trim();
             splitName[1] = splitName[1].toLowerCase().trim();
 
-            askKeyMessage.setLastName(splitName[0]);
-            askKeyMessage.setFirstName(splitName[1]);
+            askKeyMessage.setLastNameReceiver(splitName[0]);
+            askKeyMessage.setFirstNameReceiver(splitName[1]);
             try {
                 String publicKey = getReceiverPublicKey(askKeyMessage);
 
                 //encrypt message
                 Message sendMessage;
                 sendMessage = createSendMessage(messageText, publicKey);
-                sendMessage.setLastName(splitName[0]);
-                sendMessage.setFirstName(splitName[1]);
+                sendMessage.setLastNameReceiver(splitName[0]);
+                sendMessage.setFirstNameReceiver(splitName[1]);
                 sendMessage(sendMessage);
             }catch (NoKeyException e){
-                System.out.println("Can not get key from "+askKeyMessage.getFirstName()+" "+askKeyMessage.getLastName()
+                System.out.println("Can not get key from "+askKeyMessage.getFirstNameReceiver()+" "+askKeyMessage.getLastNameReceiver()
                         +", maybe (s)he does not exist");
                // e.printStackTrace();
             }
@@ -147,14 +152,14 @@ public class Client {       //todo: tls socket
 
             //get public key of receiver
             Message askKeyMessage = new Message();
-            askKeyMessage.setId(id);
+            askKeyMessage.setIdReceiver(id);
             try {
                 String publicKey = getReceiverPublicKey(askKeyMessage);
 
                 //encrypt message
                 Message sendMessage;
                 sendMessage = createSendMessage(messageText, publicKey);
-                sendMessage.setId(id);
+                sendMessage.setIdReceiver(id);
 
                 sendMessage(sendMessage);
             }catch (NoKeyException e){
