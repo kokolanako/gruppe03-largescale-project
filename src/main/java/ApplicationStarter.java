@@ -10,30 +10,29 @@ public class ApplicationStarter {
     public static void main(String[] args) throws IOException {
         String path1 = "src/main/resources/configs/config_1.json";
         String path2 = "src/main/resources/configs/config_2.json";
-        //TODO parse bank
-      String path3 = "src/main/resources/configs/bank.json"; //TODO in message set typeInstance(ORGANIZATION)
+        String path3 = "src/main/resources/configs/bank.json";
         try {
-            ArrayList<Client> clientArrayList=new ArrayList<>();
-            ArrayList<Thread> threadArrayList=new ArrayList<>();
+            ArrayList<Client> clientArrayList = new ArrayList<>();
+            ArrayList<Thread> threadArrayList = new ArrayList<>();
             clientArrayList.add(new Client(path1));
             clientArrayList.add(new Client(path2));
-
-            for (Client client:clientArrayList
-                 ) {
-                Thread thread=new Thread(() -> {
-                    if(!client.isConnectionClosed()){
+            clientArrayList.add(new Client(path3));
+            for (Client client : clientArrayList
+            ) {
+                Thread thread = new Thread(() -> {
+                    if (!client.isConnectionClosed()) {
                         client.runAllActions();
                     }
                 });
-                thread.setName("Thread "+client.getName());
+                thread.setName("Thread " + client.getName());
                 threadArrayList.add(thread);
                 thread.start();
             }
-            while(true){
+            while (true) {
                 clientArrayList.removeIf(Client::isConnectionClosed);
-                if (clientArrayList.isEmpty()){
-                    for (Thread thread:threadArrayList
-                         ) {
+                if (clientArrayList.isEmpty()) {
+                    for (Thread thread : threadArrayList
+                    ) {
                         thread.join(10);
                     }
                     System.exit(0);

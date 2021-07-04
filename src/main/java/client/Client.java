@@ -36,14 +36,15 @@ public class Client {       //todo: tls socket
           ((JSONObject) jsonObject.get("server")).getInt("port"));
       System.out.println("Connected to Server:" + socket.getInetAddress());
 
+      //TODO bei Subklasse Organisation: in message set typeInstance(ORGANIZATION)
       this.serverCommunicator = new ServerCommunicator(new ObjectInputStream(socket.getInputStream()),
           new ObjectOutputStream(socket.getOutputStream()),
           Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("retries")),
           Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")),
           this, jsonObject.getJSONObject("person").getJSONObject("keys").getString("private"));
 
-      register();
-      disconnectAfterDuration();
+      this.register();
+      this.disconnectAfterDuration();
     } catch (IOException | ClassNotFoundException e) {
       e.printStackTrace();
     }
