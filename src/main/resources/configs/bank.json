@@ -11,24 +11,30 @@
       "private": "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIZNf7m4KMr5JDR4iSEa2/oKtiaR65fzlA9X3IsoveV+9RSsZhebwzsWDUY66Qkh1HHDeWS/encp5dsaDhXK+Q97LllFNJCfegJYQMk4hD1giz5/HCfKyakFSEV66KkNlaV0G51z5prMF/aSWkSjpU7OavGV7c0ZwJ7NoPugbyhNAgMBAAECgYAIpVaSoytlHbLZ+eSCEBOXPjdJtl0fVBv0/OgCwWWwL4MhiJOt82YXGK1UFxjHcLkXdckL1lPQ9g6JE11Sw9VStGhJUI/KAtcWyIlHgDQeiAswn0G6yF7kTlia4+1641sX5xl6Bxta+8l28C00myFvmszwVJiPgJ8zhFhISgDi1QJBAOTzoG4DaoaFMSbWl5DUJtQXEp/bRIFNVx7TvHgGxfVme6uOAsjwGqJJGWDUT3S8fbXypOkGXk6+mFfssqlf64cCQQCWK1OjnAdLrUz/p7gWgjtPPyjAGrgUDFQCbuC4GtBqZ2VbffEJqGcYPrXGS/Z/bSva+GHw3rBvdoSyhAH0YQqLAkAYrm7YDUQ5ljgzQKT8NvKsoIQgeYnMCqNermK96bUDfHXOi7OfJ8snPYwf1SNvqTZAHBVNDaOzB3by25BzE+UXAkBjhCz2ZMU08pDvb4+AYye42atAu7Q3nP/jaOVFPIfXq9OwsSKWeuJvX8eItPiS8583ipklTf5wr4M65l6BO/oHAkEAmACr4Iqt9mtEmplPk721zrfEZ+VI4Wic3zAjdYtWIzTllTiLAVPZMhrAJCbNujP8CwWOiqLBq2M/kAwjq39Y9w==",
       "public": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCGTX+5uCjK+SQ0eIkhGtv6CrYmkeuX85QPV9yLKL3lfvUUrGYXm8M7Fg1GOukJIdRxw3lkv3p3KeXbGg4VyvkPey5ZRTSQn3oCWEDJOIQ9YIs+fxwnysmpBUhFeuipDZWldBudc+aazBf2klpEo6VOzmrxle3NGcCezaD7oG8oTQIDAQAB"
     },
-    "customers": [
+    "accounts": [
       {
-        "id": "5856e6cd-0da6-4573-9a04-cbb11f5e68d3",
         "iban": "DE0355667",
         "amount": "3000",
-        "roles": [
-          "CUSTOMER"
+        "customers": [
+          {
+            "id": "5856e6cd-0da6-4573-9a04-cbb11f5e68d3",
+            "role": "CUSTOMER"
+          },
+          {
+            "id": "6398C613619E4DCA88220ACA49603D87",
+            "role": "CUSTOMER"
+          }
         ]
-
       },
       {
-        "id": "6398C613619E4DCA88220ACA49603D87",
-        "iban": "DE0355667",
-        "amount": "3000",
-        "roles": [
-          "CUSTOMER"
+        "iban": "DE0355339",
+        "amount": "1500",
+        "customers": [
+          {
+            "id": "6398C613619E4DCA88220ACA49603D87",
+            "role": "CUSTOMER"
+          }
         ]
-
       }
     ]
   },
