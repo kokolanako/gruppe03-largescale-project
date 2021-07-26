@@ -66,7 +66,7 @@ public class Client {       //todo: tls socket
                     + answer.getMessageText());
             this.connectionClosed = false;
             try {
-                Thread.sleep(3000); // to wait until other client thread registers TT##//TODO otherwise null for public Key of receiver todo: try to send message multiple times
+                Thread.sleep(3000); // to wait until other client thread registers TT##, otherwise public Key of receiver could be null
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -253,7 +253,6 @@ public class Client {       //todo: tls socket
 
                     if (allMatches.size() == 3) {
                         messageType = allMatches.get(2);
-
                     }
                     String message = allMatches.get(1);
                     String receiver = allMatches.get(0);
