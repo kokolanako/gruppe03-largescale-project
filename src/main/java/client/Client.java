@@ -31,7 +31,7 @@ public class Client {       //todo: tls socket
     private String id;
 
     public Client(String path) throws IOException {
-        this.jsonObject = new JSONObject(FileReader.read(path));
+        this.jsonObject = new JSONObject(FileHandler.read(path));
         try {
             //Serverconnection
             Socket socket = SocketFactory.getDefault().createSocket(
