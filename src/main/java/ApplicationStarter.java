@@ -16,7 +16,7 @@ public class ApplicationStarter {
             ArrayList<Thread> threadArrayList = new ArrayList<>();
             clientArrayList.add(new Client(path1));
             clientArrayList.add(new Client(path2));
-            clientArrayList.add(new Client(path3));
+//            clientArrayList.add(new Client(path3));
             for (Client client : clientArrayList
             ) {
                 Thread thread = new Thread(() -> {

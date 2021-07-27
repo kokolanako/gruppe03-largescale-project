@@ -75,7 +75,7 @@ public class ServerCommunicator {
     return ++this.id_counter;
   }
 
-  private void streamOut(Message message) throws IOException {
+  public void streamOut(Message message) throws IOException {
     try {
       if (!client.isConnectionClosed()) {
         this.objectOutputStream.writeObject(message);
@@ -136,6 +136,7 @@ public class ServerCommunicator {
 
 
               } else if (answer.getTYPE().equals("TRANSACTION_SUB")) {
+                this.serverAnswer = answer;
                 Long currentAmount = this.client.retrieveAmount(answer.getIbanFrom(), answer.getId());
                 answer.setIdReceiver(answer.getId());
                 answer.setId(this.client.getId());

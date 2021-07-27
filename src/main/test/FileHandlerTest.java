@@ -18,6 +18,5 @@ public class FileHandlerTest {
 
   @Test
   public void changeAttributeInJson() throws IOException {
-    FileHandler.changeOrganisationsAttribute("src/main/resources/configs/bank.json","5856e6cd-0da6-4573-9a04-cbb11f5e68d3","DE0355667",3);
   }
 }

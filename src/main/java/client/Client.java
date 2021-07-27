@@ -134,8 +134,9 @@ public class Client {       //todo: tls socket
   }
 
   private void sendTransaction(Message messageTransaction) {
+    System.out.println("-------------------- Trans "+messageTransaction);
     if (!connectionClosed) {
-      Message answer = this.serverCommunicator.request(messageTransaction, messageTransaction.getTYPE() + "_OK");
+      Message answer = this.serverCommunicator.request(messageTransaction, messageTransaction.getTYPE()+"_OK");
       if (answer != null) {
         String logMsg = "MESSAGE OK answer in Thread " + Thread.currentThread().getName() + " " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
             + answer.getMessageText();
@@ -222,7 +223,7 @@ public class Client {       //todo: tls socket
     message.setFirstName(this.ownFirstName);
     message.setId(this.id);
     message.setMessageText(MessageHandler.encrypt(messageText, receiverPublicKey));
-    return message;
+        return message;
   }
 
   public void runAllActions() {
@@ -243,11 +244,12 @@ public class Client {       //todo: tls socket
       }
 
 
-      if (fullAction.contains("SUB") && fullAction.contains("ADD")) {
+      if (fullAction.contains("SUB") || fullAction.contains("ADD")) {
         String messageType = null;
         Message messageTransaction = new Message();
         if (fullAction.contains("SUB")) {
           messageType = "TRANSACTION_SUB";
+          messageTransaction.setIdReceiver(allMatches.get(0));
           messageTransaction.setIbanFrom(allMatches.get(1));
           messageTransaction.setAmount((this.convertToLong(allMatches.get(2))));
 
