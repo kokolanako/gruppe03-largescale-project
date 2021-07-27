@@ -21,7 +21,9 @@ public class ApplicationStarter {
             ) {
                 Thread thread = new Thread(() -> {
                     if (!client.isConnectionClosed()) {
+                      if(client.getPersonOrOrganisation().equals("person")){
                         client.runAllActions();
+                      }
                     }
                 });
                 thread.setName("Thread " + client.getName());

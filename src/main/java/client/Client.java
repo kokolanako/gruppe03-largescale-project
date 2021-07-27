@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import communication.Message;
 import communication.ServerCommunicator;
+import lombok.Getter;
 import org.json.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import lombok.SneakyThrows;
 
 
 public class Client {       //todo: tls socket
+  @Getter
     private String personOrOrganisation;
     private boolean connectionClosed;
     JSONObject jsonObject;
