@@ -25,28 +25,7 @@ public class FileHandler {
             return text;
     }
 
-  public static void changeOrganisationsAttribute(String path, String id, String iban, long amount) throws IOException {
-    JSONObject jsonObject = new JSONObject(FileHandler.read(path));
-    JSONArray accounts= jsonObject.getJSONObject("organisation").getJSONArray("accounts");
-    for( int i=0; i<accounts.length(); i++){
-      JSONObject account= accounts.getJSONObject(i);
-      JSONArray customers= account.getJSONArray("customers");
-      for( int k=0; k<customers.length(); k++){
-        JSONObject customer= customers.getJSONObject(k);
-        String idCustomer=customer.getString("id");
-        String roleCustomer=customer.getString("role");
-        if(idCustomer.equals(id) && roleCustomer.equals("CUSTOMER") ){
-          String ibanCustomer=account.getString("iban");
-          if(ibanCustomer.equals(iban)){
-            String previousAmount= account.getString("amount");
-            account.put("amount",""+amount);
-        
-          }
-
-        }
-      }
-
-    }
+  public static void write(String path, JSONObject jsonObject) throws IOException {
     File file = new File(path);
     BufferedWriter output = new BufferedWriter(new FileWriter(file));
     output.write(jsonObject.toString());
