@@ -29,6 +29,7 @@ public class Client {       //todo: tls socket
 
   private String ownLastName;
   private String ownFirstName;
+  @Getter
   private String id;
   private String path;
 
@@ -352,7 +353,7 @@ public class Client {       //todo: tls socket
     return null;
   }
 
-  private void writeNewAmount(String iban, String idPerson, long amount) {
+  public void writeNewAmount(String iban, String idPerson, long amount) {
     JSONArray accounts = jsonObject.getJSONObject("organisation").getJSONArray("accounts");
     for (int i = 0; i < accounts.length(); i++) {
       JSONObject account = accounts.getJSONObject(i);
