@@ -53,18 +53,24 @@ public class Client {       //todo: tls socket
         System.exit(1);
       }
       //TODO bei Subklasse Organisation: in message set typeInstance(ORGANIZATION)
-      this.serverCommunicator = new ServerCommunicator(new ObjectInputStream(socket.getInputStream()),
-          new ObjectOutputStream(socket.getOutputStream()),
+      this.serverCommunicator = new ServerCommunicator(
+          new ObjectOutputStream(socket.getOutputStream()),new ObjectInputStream(socket.getInputStream()),
           Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("retries")),
           Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")),
           this, jsonObject.getJSONObject(this.personOrOrganisation).getJSONObject("keys").getString("private"));
 
+
       this.register();
+      if (this.personOrOrganisation.equals("organisation")) {
+        this.serverCommunicator.createAndStartTransactionsListener(new ObjectInputStream(socket.getInputStream()));
+      }
       this.disconnectAfterDuration();
     } catch (IOException | ClassNotFoundException e) {
       e.printStackTrace();
     }
   }
+
+
 
   private void register() throws IOException, ClassNotFoundException {
     Message answer = this.serverCommunicator.request(createRegistrationMessage(), "OK");
@@ -136,14 +142,10 @@ public class Client {       //todo: tls socket
   private void sendTransaction(Message messageTransaction) {
     System.out.println("-------------------- Trans "+messageTransaction);
     if (!connectionClosed) {
-      Message answer = this.serverCommunicator.request(messageTransaction, messageTransaction.getTYPE()+"_OK");
-      if (answer != null) {
-        String logMsg = "MESSAGE OK answer in Thread " + Thread.currentThread().getName() + " " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
-            + answer.getMessageText();
-        System.out.println(logMsg);
-
-      } else {
-        System.out.println("Stop now retrying");
+      try {
+        this.serverCommunicator.streamOut(messageTransaction);
+      } catch (IOException e) {
+        e.printStackTrace();
       }
     }
   }

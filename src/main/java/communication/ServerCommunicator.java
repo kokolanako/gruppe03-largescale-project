@@ -26,7 +26,10 @@ public class ServerCommunicator {
   DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
   String privateKey;
 
-  public ServerCommunicator(ObjectInputStream inputStream, ObjectOutputStream outputStream, int maxRetries, int timeout, Client client, String privateKey) {
+  private Thread bankTransactions;
+
+
+  public ServerCommunicator( ObjectOutputStream outputStream, ObjectInputStream inputStream,int maxRetries, int timeout, Client client, String privateKey) {
     this.objectOutputStream = outputStream;
     this.objectInputStream = inputStream;
     this.maxRetries = maxRetries;
@@ -38,6 +41,59 @@ public class ServerCommunicator {
     } catch (IOException e) {
       e.printStackTrace();
     }
+
+
+  }
+
+  public void createAndStartTransactionsListener(ObjectInputStream os) {
+    this.bankTransactions = new Thread(() -> {
+      while (true) {
+        try {
+          Object in = os.readObject();
+          if (in instanceof Message) {
+            Message answer = (Message) in;
+
+            if (answer.getTYPE().equals("TRANSACTION_SUB")) {
+              Long currentAmount = this.client.retrieveAmount(answer.getIbanFrom(), answer.getId());
+              answer.setIdReceiver(answer.getId());
+              answer.setId(this.client.getId());
+              if (currentAmount == null) {
+                answer.setTYPE("TRANSACTION_SUB_ERROR");
+                answer.setMessageText("TRANSACTION_SUB could not take place due to missing account for id: " + answer.getIdReceiver());
+                this.streamOut(answer);
+                break;
+              } else {
+                long newAmount = currentAmount - answer.getAmount();
+                if (newAmount < 0) {
+                  answer.setTYPE("TRANSACTION_SUB_ERROR");
+                  answer.setMessageText("TRANSACTION_SUB could not take place due to the negative resulting amount at account for id: " + answer.getIdReceiver());
+                  this.streamOut(answer);
+                  break;
+                } else {
+                  this.client.writeNewAmount(answer.getIbanFrom(), answer.getId(), newAmount);
+                  answer.setTYPE("TRANSACTION_SUB_OK");
+                  answer.setMessageText("TRANSACTION_SUB took place successfully for id " + answer.getIdReceiver());
+                  this.streamOut(answer);
+                  break;
+                }
+              }
+            } else if (answer.getTYPE().equals("TRANSACTION_SUB_OK")) {
+              this.logger.logString(answer.getMessageText());
+            } else if (answer.getTYPE().equals("TRANSACTION_SUB_ERROR")) {
+              System.out.println("Server error detected for msg-ID: : " + answer.getMessage_ID() + " Error message: " + answer.getMessageText());
+              this.serverAnswer = answer;
+              break;
+            }}
+
+          } catch(IOException e){
+            e.printStackTrace();
+          } catch(ClassNotFoundException e){
+            e.printStackTrace();
+          }
+        }
+
+    });
+    this.bankTransactions.start();
   }
 
   public Message request(Message message, String responseType) {
@@ -135,36 +191,7 @@ public class ServerCommunicator {
                 this.logger.logString(prefix + " Message id " + answer.getMessage_ID() + " from " + answer.getFirstName() + " " + answer.getLastName() + " at " + this.dtf.format(now) + ": " + messageText);
 
 
-              } else if (answer.getTYPE().equals("TRANSACTION_SUB")) {
-                this.serverAnswer = answer;
-                Long currentAmount = this.client.retrieveAmount(answer.getIbanFrom(), answer.getId());
-                answer.setIdReceiver(answer.getId());
-                answer.setId(this.client.getId());
-                if (currentAmount == null) {
-                  answer.setTYPE("TRANSACTION_SUB_ERROR");
-                  answer.setMessageText("TRANSACTION_SUB could not take place due to missing account for id: " + answer.getIdReceiver());
-                  this.streamOut(answer);
-                  break;
-                } else {
-                  long newAmount = currentAmount - answer.getAmount();
-                  if (newAmount < 0) {
-                    answer.setTYPE("TRANSACTION_SUB_ERROR");
-                    answer.setMessageText("TRANSACTION_SUB could not take place due to the negative resulting amount at account for id: " + answer.getIdReceiver());
-                    this.streamOut(answer);
-                    break;
-                  } else {
-                    this.client.writeNewAmount(answer.getIbanFrom(), answer.getId(), newAmount);
-                    answer.setTYPE("TRANSACTION_SUB_OK");
-                    answer.setMessageText("TRANSACTION_SUB took place successfully for id " + answer.getIdReceiver());
-                    this.streamOut(answer);
-                    break;
-                  }
-                }
-              }
-              else if (answer.getTYPE().equals("TRANSACTION_SUB_OK")) {
-                this.logger.logString(answer.getMessageText());
-              }
-              else if (answer.getTYPE().equals("ERROR") || answer.getTYPE().equals("TRANSACTION_SUB_ERROR") ) {
+              } else if (answer.getTYPE().equals("ERROR") || answer.getTYPE().equals("TRANSACTION_SUB_ERROR")) {
                 System.out.println("Server error detected for msg-ID: : " + answer.getMessage_ID() + " Error message: " + answer.getMessageText());
                 this.serverAnswer = answer;
                 break;
