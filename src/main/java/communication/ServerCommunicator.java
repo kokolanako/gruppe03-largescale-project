@@ -54,6 +54,7 @@ public class ServerCommunicator {
             Message answer = (Message) in;
 
             if (answer.getTYPE().equals("TRANSACTION_SUB")) {
+              //TODO check identity msg.getID whether it suits to account owner
               Long currentAmount = this.client.retrieveAmount(answer.getIbanFrom(), answer.getId());
               answer.setIdReceiver(answer.getId());
               answer.setId(this.client.getId());

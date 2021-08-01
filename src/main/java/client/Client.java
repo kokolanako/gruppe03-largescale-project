@@ -32,14 +32,14 @@ public class Client {       //todo: tls socket
   @Getter
   private String id;
   private String path;
-
+private Socket socket;
 
   public Client(String path) throws IOException {
     this.path = path;
     this.jsonObject = new JSONObject(FileHandler.read(path));
     try {
       //Serverconnection
-      Socket socket = SocketFactory.getDefault().createSocket(
+      this.socket = SocketFactory.getDefault().createSocket(
           ((JSONObject) jsonObject.get("server")).getString("ip"),
           ((JSONObject) jsonObject.get("server")).getInt("port"));
       System.out.println("Connected to Server:" + socket.getInetAddress());
@@ -61,9 +61,7 @@ public class Client {       //todo: tls socket
 
 
       this.register();
-      if (this.personOrOrganisation.equals("organisation")) {
-//        this.serverCommunicator.createAndStartTransactionsListener(new ObjectInputStream(socket.getInputStream()));
-      }
+
       this.disconnectAfterDuration();
     } catch (IOException | ClassNotFoundException e) {
       e.printStackTrace();
@@ -381,6 +379,16 @@ public class Client {       //todo: tls socket
       FileHandler.write(this.path, this.jsonObject);
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+
+  public void startListeningToTransactions() {
+    if (this.personOrOrganisation.equals("organisation")) {
+      try {
+        this.serverCommunicator.createAndStartTransactionsListener(new ObjectInputStream(socket.getInputStream()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 }

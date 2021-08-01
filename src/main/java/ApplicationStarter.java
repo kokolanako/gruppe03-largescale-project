@@ -22,6 +22,8 @@ public class ApplicationStarter {
           if (!client.isConnectionClosed()) {
             if (client.getPersonOrOrganisation().equals("person")) {
               client.runAllActions();
+            }else{
+              client.startListeningToTransactions();
             }
           }
         });
