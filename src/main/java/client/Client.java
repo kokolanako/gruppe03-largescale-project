@@ -395,11 +395,8 @@ private Socket socket;
 
   public void startListeningToTransactions() {
     if (this.personOrOrganisation.equals("organisation")) {
-      try {
-        this.serverCommunicator.createAndStartTransactionsListener(new ObjectInputStream(socket.getInputStream()));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+        this.serverCommunicator.createAndStartTransactionsListener();
+
     }
   }
 }

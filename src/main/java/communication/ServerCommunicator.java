@@ -45,11 +45,12 @@ public class ServerCommunicator {
 
   }
 //TODO Encode/Decode , pull public key of requester by checking json config-> problem if multiple ids are registered for one account
-  public void createAndStartTransactionsListener(ObjectInputStream os) {
+  //TODO encrypt message text with msg.getId-PUB_KEY
+  public void createAndStartTransactionsListener() {
     this.bankTransactions = new Thread(() -> {
       while (true) {
         try {
-          Object in = os.readObject();
+          Object in = this.objectInputStream.readObject();
           if (in instanceof Message) {
             Message answer = (Message) in;
 
