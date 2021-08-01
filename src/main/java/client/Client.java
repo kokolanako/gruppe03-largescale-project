@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class Client {       //todo: tls socket
+public abstract class Client {
   @Getter
   private String personOrOrganisation;
   private boolean connectionClosed;
@@ -44,6 +44,7 @@ private Socket socket;
           ((JSONObject) jsonObject.get("server")).getInt("port"));
       System.out.println("Connected to Server:" + socket.getInetAddress());
 
+      //todo: soll das geändert werden
       if (jsonObject.keySet().contains("person")) {
         this.personOrOrganisation = "person";
       } else if (jsonObject.keySet().contains("organisation")) {
@@ -59,6 +60,7 @@ private Socket socket;
           Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")),
           this, jsonObject.getJSONObject(this.personOrOrganisation).getJSONObject("keys").getString("private"));
 
+      this.serverCommunicator = createServerCommunicator(socket);
 
       this.register();
 
@@ -66,6 +68,21 @@ private Socket socket;
     } catch (IOException | ClassNotFoundException e) {
       e.printStackTrace();
     }
+  }
+
+
+  abstract String getPublicKey();
+  abstract String getPrivateKey();
+  abstract String getID();
+  abstract String[] getName();
+
+
+  private ServerCommunicator createServerCommunicator(Socket socket) throws IOException {
+    return new ServerCommunicator(new ObjectInputStream(socket.getInputStream()),
+            new ObjectOutputStream(socket.getOutputStream()),
+            Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("retries")),
+            Integer.parseInt(((JSONObject) jsonObject.get("general")).getString("timeout")),
+            this, getPrivateKey());
   }
 
 
@@ -106,20 +123,17 @@ private Socket socket;
   private Message createRegistrationMessage() {
     Message message = new Message();
     message.setTYPE("REGISTER");
-    this.id = ((JSONObject) jsonObject.get(this.personOrOrganisation)).getString("id");
+    this.id = getID();
     message.setId(id);
-    String[] name = (((JSONObject) jsonObject.get(this.personOrOrganisation)).getString("name")).split(",");
+    String[] name = getName();
     this.ownLastName = name[0].trim().toLowerCase();
     message.setLastName(this.ownLastName);
-    if (name.length == 2) {
-      this.ownFirstName = name[1].trim().toLowerCase();
-      message.setFirstName(this.ownFirstName);
-    }
-    message.setPublicKey(((JSONObject) ((JSONObject) jsonObject.get(this.personOrOrganisation)).get("keys")).getString("public"));
+    this.ownFirstName = name[1].trim().toLowerCase();
+    message.setFirstName(this.ownFirstName);
+    message.setPublicKey(getPublicKey());
     message.setMessageText("");
     return message;
   }
-
 
   private String getReceiverPublicKey(Message message) throws IOException, ClassNotFoundException, NoKeyException {
     message.setTYPE("ASK_PUBLIC_KEY");
@@ -238,7 +252,7 @@ private Socket socket;
       Matcher matcher = pattern.matcher(fullAction);
       List<String> allMatches = new ArrayList<String>();
 
-      while (matcher.find()) {
+      while(matcher.find()){
         allMatches.add(matcher.group(1).trim());
 //        System.out.println(matcher.group(1));
       }
@@ -309,9 +323,6 @@ private Socket socket;
     return -1;
   }
 
-  public String getName() {
-    return ((JSONObject) this.jsonObject.get(personOrOrganisation)).getString("name");
-  }
 
   public void closeConnection() {
     Message message = new Message();
