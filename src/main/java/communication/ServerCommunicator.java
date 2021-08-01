@@ -44,7 +44,7 @@ public class ServerCommunicator {
 
 
   }
-
+//TODO Encode/Decode , pull public key of requester by checking json config-> problem if multiple ids are registered for one account
   public void createAndStartTransactionsListener(ObjectInputStream os) {
     this.bankTransactions = new Thread(() -> {
       while (true) {

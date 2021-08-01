@@ -62,7 +62,7 @@ public class Client {       //todo: tls socket
 
       this.register();
       if (this.personOrOrganisation.equals("organisation")) {
-        this.serverCommunicator.createAndStartTransactionsListener(new ObjectInputStream(socket.getInputStream()));
+//        this.serverCommunicator.createAndStartTransactionsListener(new ObjectInputStream(socket.getInputStream()));
       }
       this.disconnectAfterDuration();
     } catch (IOException | ClassNotFoundException e) {
