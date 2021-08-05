@@ -1,16 +1,18 @@
 package client;
 
 import communication.Message;
-import communication.ServerCommunicator;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OrganisationClient extends Client{
 
+    String personOrOrganisation = "organisation";
     public OrganisationClient(String path) throws IOException {
         super(path);
     }
@@ -23,14 +25,17 @@ public class OrganisationClient extends Client{
         return jsonObject.getJSONObject("organisation").getJSONObject("keys").getString("private");
     }
 
-    String getID() {
+    public String getID() {
         return ((JSONObject) jsonObject.get("organisation")).getString("id");
     }
 
-    String[] getName() {
+    public String[] getName() {
          String[] name= {((JSONObject) this.jsonObject.get("organisation")).getString("name"), ""};
          return  name;
     }
 
-
+    @Override
+    String getTypeInstance() {
+        return "ORGANIZATION";
+    }
 }

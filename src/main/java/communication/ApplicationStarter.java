@@ -1,4 +1,8 @@
+package communication;
+
+import client.BankClient;
 import client.Client;
+import client.PersonClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,19 +15,19 @@ public class ApplicationStarter {
     String path2 = "src/main/resources/configs/config_2.json";
     String path3 = "src/main/resources/configs/bank.json";
     try {
-      ArrayList<Client> clientArrayList = new ArrayList<>();
+      ArrayList<PersonClient> clientArrayList = new ArrayList<>();
       ArrayList<Thread> threadArrayList = new ArrayList<>();
-      clientArrayList.add(new Client(path3));
-      clientArrayList.add(new Client(path1));
-      clientArrayList.add(new Client(path2));
-      for (Client client : clientArrayList
+      //clientArrayList.add(new BankClient(path3));
+      clientArrayList.add(new PersonClient(path1));
+      clientArrayList.add(new PersonClient(path2));
+      for (PersonClient client : clientArrayList
       ) {
         Thread thread = new Thread(() -> {
           if (!client.isConnectionClosed()) {
             if (client.getPersonOrOrganisation().equals("person")) {
               client.runAllActions();
             }else{
-              client.startListeningToTransactions();
+             // client.startListeningToTransactions(); //todo: was ist das
             }
           }
         });

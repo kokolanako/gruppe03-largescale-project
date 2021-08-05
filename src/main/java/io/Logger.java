@@ -1,4 +1,4 @@
-package communication;
+package io;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -17,7 +17,7 @@ public class Logger {
         fileWriter.write(message+"\n");
     }
 
-    protected void finalalize() throws IOException {
+    public void finalalize() throws IOException {
         this.fileWriter.close();
     }
 }

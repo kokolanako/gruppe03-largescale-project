@@ -1,7 +1,9 @@
 package communication;
 
+import client.BankClient;
 import client.Client;
 import client.MessageHandler;
+import io.Logger;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -46,19 +48,19 @@ public class ServerCommunicator {
   }
 //TODO Encode/Decode , pull public key of requester by checking json config-> problem if multiple ids are registered for one account
   //TODO encrypt message text with msg.getId-PUB_KEY
-  public void createAndStartTransactionsListener() {
+  public void createAndStartTransactionsListener(BankClient client) {
     this.bankTransactions = new Thread(() -> {
       while (true) {
         try {
-          Object in = this.objectInputStream.readObject();
+          Object in = this.objectInputStream.readObject(); //todo: lock setzen
           if (in instanceof Message) {
             Message answer = (Message) in;
 
             if (answer.getTYPE().equals("TRANSACTION_SUB")) {
               //TODO check identity msg.getID whether it suits to account owner
-              Long currentAmount = this.client.retrieveAmount(answer.getIbanFrom(), answer.getId());
+              Long currentAmount = client.retrieveAmount(answer.getIbanFrom(), answer.getId());
               answer.setIdReceiver(answer.getId());
-              answer.setId(this.client.getId());
+              answer.setId(client.getID());
               if (currentAmount == null) {
                 answer.setTYPE("TRANSACTION_SUB_ERROR");
                 answer.setMessageText("TRANSACTION_SUB could not take place due to missing account for id: " + answer.getIdReceiver());
@@ -72,7 +74,7 @@ public class ServerCommunicator {
                   this.streamOut(answer);
                   break;
                 } else {
-                  this.client.writeNewAmount(answer.getIbanFrom(), answer.getId(), newAmount);
+                  client.writeNewAmount(answer.getIbanFrom(), answer.getId(), newAmount);
                   answer.setTYPE("TRANSACTION_SUB_OK");
                   answer.setMessageText("TRANSACTION_SUB took place successfully for id " + answer.getIdReceiver());
                   this.streamOut(answer);
