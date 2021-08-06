@@ -1,0 +1,2 @@
+business Message id 3 from bastian küppers at 2021/08/06 18:30:31: HELLO THOMAS
+private Message id 5 from bastian küppers at 2021/08/06 18:30:31: HELLO THOMAS 2

@@ -123,8 +123,8 @@ public abstract class Client {
       throw new NoKeyException("Connection to Server already closed, stop key request");
     }
     Message answer = this.serverCommunicator.request(message, "ASK_PUBLIC_KEY");
-    answer.setTypeInstance(getTypeInstance());
     if (answer != null) {
+      answer.setTypeInstance(getTypeInstance());
       System.out.println("Answer in Thread " + Thread.currentThread().getName() + " " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
               + answer.getPublicKey());
       return answer.getPublicKey();
