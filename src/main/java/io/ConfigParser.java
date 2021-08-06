@@ -2,6 +2,7 @@ package io;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import pojo.Account;
+import pojo.BankConfig;
 import pojo.Config;
 
 import java.io.IOException;
@@ -12,7 +13,7 @@ import java.util.List;
 public class ConfigParser {
 
 
-  public static Config parse(String path) {
+/*  public static Config parse(String path) {
     InputStream is = ConfigParser.class.getClassLoader().getResourceAsStream(path);
 //    File configFile = new File(is);
     ObjectMapper objectMapper = new ObjectMapper();
@@ -24,7 +25,7 @@ public class ConfigParser {
     }
     return configDTO;
   }
-
+*/
 
   public static String listOfObjectsToString(List<?> objects) {
     StringBuilder sb = new StringBuilder();
@@ -40,7 +41,18 @@ public class ConfigParser {
     return acc;
   }
 
-  //public static parseAccounts Account
+  public static BankConfig parse(String path) {
+    InputStream is = ConfigParser.class.getClassLoader().getResourceAsStream(path);
+//    File configFile = new File(is);
+    ObjectMapper objectMapper = new ObjectMapper();
+    BankConfig configDTO = null;
+    try {
+      configDTO = objectMapper.readValue(is, BankConfig.class);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return configDTO;
+  }
 
 }
 

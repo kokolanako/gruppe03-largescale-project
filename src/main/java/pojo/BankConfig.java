@@ -6,5 +6,5 @@ import java.util.List;
 
  @Data
 public class BankConfig extends Config {
-
+    Bank organisation;
 }

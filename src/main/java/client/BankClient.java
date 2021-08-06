@@ -3,6 +3,7 @@ package client;
 import io.ConfigParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import pojo.BankConfig;
 import pojo.Config;
 
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.util.Map;
 
 
 public class BankClient extends OrganisationClient{
-    Config config;
+    BankConfig config;
 
     public BankClient(String path) throws IOException {
         super(path);
@@ -78,6 +79,7 @@ public class BankClient extends OrganisationClient{
         return null;
     } */
 
+    /* todo
     public addAmount(long amount, String iban, String Id){
         return; //todo
     }
@@ -116,5 +118,5 @@ public class BankClient extends OrganisationClient{
     private boolean hasAddPermissions(String iban, String id) {
 
     }
-
+*/
 }
