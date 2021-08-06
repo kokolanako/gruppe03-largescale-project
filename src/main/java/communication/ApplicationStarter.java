@@ -14,11 +14,11 @@ public class ApplicationStarter {
   public static void main(String[] args) throws IOException {
     String path1 = "src/main/resources/configs/config_1.json";
     String path2 = "src/main/resources/configs/config_2.json";
-    String path3 = "src/main/resources/configs/bank.json";
+//    String path3 = "src/main/resources/configs/bank.json";
     try {
       ArrayList<Client> clientArrayList = new ArrayList<>();
       ArrayList<Thread> threadArrayList = new ArrayList<>();
-      clientArrayList.add(new BankClient(path3));
+//      clientArrayList.add(new BankClient(path3));
       clientArrayList.add(new PersonClient(path1));
       clientArrayList.add(new PersonClient(path2));
 

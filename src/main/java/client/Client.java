@@ -110,7 +110,7 @@ public abstract class Client {
   }
 
   private Message createRegistrationMessage() {
-    Message message = createMessageWithClientInformation("Register");
+    Message message = createMessageWithClientInformation("REGISTER");
     message.setPublicKey(getPublicKey());
     message.setMessageText("");
     return message;
