@@ -1,19 +1,26 @@
 package client;
 
+import io.ConfigParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import pojo.Config;
 
 import java.io.IOException;
 import java.util.Map;
 
 
 public class BankClient extends OrganisationClient{
+    Config config;
+
     public BankClient(String path) throws IOException {
         super(path);
         this.serverCommunicator.createAndStartTransactionsListener(this);
+        config = ConfigParser.parse(path);
     }
 
-    Map<String, BankAccount> clientAccounts;
+
+
+
 
     /*
    public void writeNewAmount(String iban, String idPerson, long amount) {
@@ -72,19 +79,19 @@ public class BankClient extends OrganisationClient{
     } */
 
     public addAmount(long amount, String iban, String Id){
-
+        return; //todo
     }
 
     public removeAmount(long amount, String iban, String id){
-
+        return; //todo
     }
 
     public DeleteAccount(String iban, String id){
-
+        return; //todo
     }
 
     public TransferAmount(String iban, String id, String recieverIban){
-
+        return; //todo
     }
 
     boolean checkPermission(BankAccountActions action,String iban, String Id) throws Exception {
