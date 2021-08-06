@@ -1,5 +1,7 @@
-package client;
+package client.bank;
 
+import client.FileHandler;
+import client.OrganisationClient;
 import io.ConfigParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -10,20 +12,16 @@ import java.io.IOException;
 import java.util.Map;
 
 
-public class BankClient extends OrganisationClient{
+public class BankClient extends OrganisationClient {
     BankConfig config;
 
     public BankClient(String path) throws IOException {
         super(path);
-        this.serverCommunicator.createAndStartTransactionsListener(this);
+
         config = ConfigParser.parse(path);
     }
 
-
-
-
-
-    /*
+    //updaten, gegebenenfalls löschen
    public void writeNewAmount(String iban, String idPerson, long amount) {
         JSONArray accounts = jsonObject.getJSONObject("organisation").getJSONArray("accounts");
         for (int i = 0; i < accounts.length(); i++) {
@@ -49,9 +47,9 @@ public class BankClient extends OrganisationClient{
         }
     }
 
-    */
 
-    /*
+
+    //todo: updaten, gegebenenfalls löschen
     public Long retrieveAmount(String iban, String id) {
         try {
             this.jsonObject = new JSONObject(FileHandler.read(path));
@@ -77,8 +75,11 @@ public class BankClient extends OrganisationClient{
             }
         }
         return null;
-    } */
+    }
 
+    public void startListeningToTransactions() {
+        this.serverCommunicator.createAndStartTransactionsListener(this);
+    }
     /* todo
     public addAmount(long amount, String iban, String Id){
         return; //todo

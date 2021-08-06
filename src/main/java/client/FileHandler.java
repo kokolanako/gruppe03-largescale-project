@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 
 public class FileHandler {
 
-    static String read(String path) throws IOException {
+    public static String read(String path) throws IOException {
         File file = new File(path);
         String text = "";
         if (file.exists()){

@@ -19,14 +19,14 @@ public abstract class Client {
   @Getter
   private String personOrOrganisation;
   boolean connectionClosed;
-  JSONObject jsonObject;
-  ServerCommunicator serverCommunicator;
+  protected JSONObject jsonObject;
+  protected ServerCommunicator serverCommunicator;
 
   String ownLastName;
   String ownFirstName;
   @Getter
   String id;
-  String path;
+  protected String path;
   private Socket socket;
 
   public Client(String path) throws IOException {
@@ -48,8 +48,8 @@ public abstract class Client {
 
       this.id = getID();
       String[] name = getName();
-      this.ownLastName = name[0].trim().toLowerCase();
       this.ownFirstName = name[1].trim().toLowerCase();
+      this.ownLastName = name[0].trim().toLowerCase();
 
       this.register();
 
@@ -192,6 +192,7 @@ public abstract class Client {
       System.out.println("Connection not closed");
     }
   }
+
 
 }
 

@@ -30,7 +30,7 @@ public class OrganisationClient extends Client{
     }
 
     public String[] getName() {
-         String[] name= {((JSONObject) this.jsonObject.get("organisation")).getString("name"), ""};
+         String[] name= {"", ((JSONObject) this.jsonObject.get("organisation")).getString("name")};
          return  name;
     }
 

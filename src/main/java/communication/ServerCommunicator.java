@@ -1,6 +1,6 @@
 package communication;
 
-import client.BankClient;
+import client.bank.BankClient;
 import client.Client;
 import client.MessageHandler;
 import io.Logger;
