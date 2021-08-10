@@ -4,7 +4,9 @@ import lombok.Data;
 
 import java.util.List;
 
- @Data
-public class BankConfig extends Config {
-    Bank organisation;
+@Data
+public class BankConfig {
+    private General general;
+    private Server server;
+    private Organisation organisation;
 }

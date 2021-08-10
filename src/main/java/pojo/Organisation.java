@@ -6,8 +6,8 @@ import java.util.List;
 
 @Data
 public class Organisation{
-    List<String> keys;
+    private Keys keys;
     private String name;
     private String id;
-    List<Account> accounts;
+    private List<Account> accounts;
 }

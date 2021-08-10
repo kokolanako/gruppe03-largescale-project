@@ -1,24 +1,48 @@
 package client.bank;
 
+import client.Client;
 import client.FileHandler;
 import client.OrganisationClient;
 import io.ConfigParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import pojo.BankConfig;
-import pojo.Config;
 
 import java.io.IOException;
-import java.util.Map;
 
 
-public class BankClient extends OrganisationClient {
+public class BankClient extends Client {
     BankConfig config;
 
-    public BankClient(String path) throws IOException {
-        super(path);
-
+    public BankClient(String path) throws IOException, ClassNotFoundException {
+        super();
+        //FIXME: configs have to be present before calling super
         config = ConfigParser.parse(path);
+    }
+
+    @Override
+    public String getPublicKey(){
+        return config.getOrganisation().getKeys().getPublicKey();
+    }
+
+    @Override
+    public String getPrivateKey() {
+        return config.getOrganisation().getKeys().getPrivateKey();
+    }
+
+    @Override
+    public String getID() {
+        return config.getOrganisation().getId();
+    }
+
+    @Override
+    public String[] getName() {
+        return new String[]{config.getOrganisation().getName()};
+    }
+
+    @Override
+    public String getTypeInstance() {
+        return "ORGANIZATION";
     }
 
     //updaten, gegebenenfalls löschen

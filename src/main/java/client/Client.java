@@ -59,16 +59,20 @@ public abstract class Client {
     }
   }
 
+  public Client() throws IOException, ClassNotFoundException {
+    this.register();
+  }
 
-  abstract String getPublicKey();
 
-  abstract String getPrivateKey();
+  public abstract String getPublicKey();
+
+  public abstract String getPrivateKey();
 
   public abstract String getID();
 
   public abstract String[] getName();
 
-  abstract String getTypeInstance();
+  public abstract String getTypeInstance();
 
   /**
    * registers on the Server given in the configs

@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class Server {
-    String port;
-    String ip;
+    private String port;
+    private String ip;
 }

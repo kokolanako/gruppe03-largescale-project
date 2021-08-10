@@ -1,14 +1,8 @@
 package client;
 
-import communication.Message;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class OrganisationClient extends Client{
 
@@ -17,11 +11,11 @@ public class OrganisationClient extends Client{
         super(path);
     }
 
-    String getPublicKey(){
+    public String getPublicKey(){
         return jsonObject.getJSONObject("organisation").getJSONObject("keys").getString("public");
     }
 
-    String getPrivateKey(){
+    public String getPrivateKey(){
         return jsonObject.getJSONObject("organisation").getJSONObject("keys").getString("private");
     }
 
@@ -35,7 +29,7 @@ public class OrganisationClient extends Client{
     }
 
     @Override
-    String getTypeInstance() {
+    public String getTypeInstance() {
         return "ORGANIZATION";
     }
 }

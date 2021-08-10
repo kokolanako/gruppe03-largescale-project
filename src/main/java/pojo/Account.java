@@ -8,5 +8,5 @@ import java.util.List;
 public class Account {
     private long amount;
     private String iban;
-    List<Customer> customers;
+    private List<Customer> customers;
 }

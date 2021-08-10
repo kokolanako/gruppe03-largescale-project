@@ -17,11 +17,11 @@ public class PersonClient extends Client{
         super(path);
     }
 
-    String getPublicKey(){
+    public String getPublicKey(){
         return jsonObject.getJSONObject("person").getJSONObject("keys").getString("public");
     }
 
-    String getPrivateKey(){
+    public String getPrivateKey(){
         return jsonObject.getJSONObject("person").getJSONObject("keys").getString("private");
     }
     public String getID() {
@@ -34,7 +34,7 @@ public class PersonClient extends Client{
     }
 
     @Override
-    String getTypeInstance() {
+    public String getTypeInstance() {
         return "PERSON";
     }
 

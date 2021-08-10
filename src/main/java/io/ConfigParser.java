@@ -3,8 +3,8 @@ package io;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import pojo.Account;
 import pojo.BankConfig;
-import pojo.Config;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -47,7 +47,7 @@ public class ConfigParser {
     ObjectMapper objectMapper = new ObjectMapper();
     BankConfig configDTO = null;
     try {
-      configDTO = objectMapper.readValue(is, BankConfig.class);
+      configDTO = objectMapper.readValue(new File(path), BankConfig.class);
     } catch (IOException e) {
       e.printStackTrace();
     }
