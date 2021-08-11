@@ -1,23 +1,32 @@
 package client.bank;
 
 import client.Client;
-import client.FileHandler;
-import client.OrganisationClient;
+import communication.ServerCommunicator;
 import io.ConfigParser;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import pojo.Account;
 import pojo.BankConfig;
+import pojo.Customer;
 
+import javax.net.SocketFactory;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 
 
 public class BankClient extends Client {
-    BankConfig config;
+    private static final BankConfig config = ConfigParser.parse("src/main/resources/configs/bank.json");
 
-    public BankClient(String path) throws IOException, ClassNotFoundException {
-        super();
-        //FIXME: configs have to be present before calling super
-        config = ConfigParser.parse(path);
+    public BankClient() throws IOException, ClassNotFoundException {
+
+        Socket socket = SocketFactory.getDefault().createSocket(config.getServer().getIp(), config.getServer().getPort());
+
+        this.serverCommunicator = new ServerCommunicator(new ObjectOutputStream(socket.getOutputStream()), new ObjectInputStream(socket.getInputStream()),
+                config.getGeneral().getRetries(), config.getGeneral().getTimeout(), this, config.getOrganisation().getKeys().getPrivateKey());
+        this.id = getID();
+        this.ownFirstName = config.getOrganisation().getName();
+        this.ownLastName = " Bank";
+        this.register();
     }
 
     @Override
@@ -45,65 +54,37 @@ public class BankClient extends Client {
         return "ORGANIZATION";
     }
 
-    //updaten, gegebenenfalls löschen
-   public void writeNewAmount(String iban, String idPerson, long amount) {
-        JSONArray accounts = jsonObject.getJSONObject("organisation").getJSONArray("accounts");
-        for (int i = 0; i < accounts.length(); i++) {
-            JSONObject account = accounts.getJSONObject(i);
-            JSONArray customers = account.getJSONArray("customers");
-            for (int k = 0; k < customers.length(); k++) {
-                JSONObject customer = customers.getJSONObject(k);
-                String idCustomer = customer.getString("id");
-                String roleCustomer = customer.getString("role");
-                if (idCustomer.equals(idPerson) && roleCustomer.equals("CUSTOMER")) {
-                    String ibanCustomer = account.getString("iban");
-                    if (ibanCustomer.equals(iban)) {
-                        account.put("amount", "" + amount);
+    public void startListeningToTransactions() throws IOException {
+        // start transactions
+        System.out.println("connected");
+    }
 
+    public Long retrieveAmount(String ibanFrom, String id) {
+        for (Account account : config.getOrganisation().getAccounts()){
+            if (account.getIban().equals(ibanFrom)) {
+                for (Customer customer: account.getCustomers()) {
+                    if (id.equals(customer.getId()) && customer.getRoles().stream().anyMatch(s -> s.equals("CUSTOMER"))) {
+                        return account.getAmount();
                     }
                 }
             }
         }
-        try {
-            FileHandler.write(this.path, this.jsonObject);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        throw new RuntimeException("No account found with iban: " + ibanFrom + " and id: " + id);
     }
 
-
-
-    //todo: updaten, gegebenenfalls löschen
-    public Long retrieveAmount(String iban, String id) {
-        try {
-            this.jsonObject = new JSONObject(FileHandler.read(path));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        JSONArray accounts = this.jsonObject.getJSONObject("organisation").getJSONArray("accounts");
-        for (int i = 0; i < accounts.length(); i++) {
-            JSONObject account = accounts.getJSONObject(i);
-            JSONArray customers = account.getJSONArray("customers");
-            for (int k = 0; k < customers.length(); k++) {
-                JSONObject customer = customers.getJSONObject(k);
-                String idCustomer = customer.getString("id");
-                String roleCustomer = customer.getString("role");
-                if (idCustomer.equals(id) && roleCustomer.equals("CUSTOMER")) {
-                    String ibanCustomer = account.getString("iban");
-                    if (ibanCustomer.equals(iban)) {
-                        String previousAmount = account.getString("amount");
-                        return Long.parseLong(previousAmount);
+    public void writeNewAmount(String ibanFrom, String id, long newAmount) {
+        for (Account account : config.getOrganisation().getAccounts()){
+            if (account.getIban().equals(ibanFrom)) {
+                for (Customer customer: account.getCustomers()) {
+                    if (id.equals(customer.getId()) && customer.getRoles().stream().anyMatch(s -> s.equals("CUSTOMER"))) {
+                        account.setAmount(newAmount);
                     }
-
                 }
             }
         }
-        return null;
+        throw new RuntimeException("No account found with iban: " + ibanFrom + " and id: " + id);
     }
 
-    public void startListeningToTransactions() {
-        this.serverCommunicator.createAndStartTransactionsListener(this);
-    }
     /* todo
     public addAmount(long amount, String iban, String Id){
         return; //todo

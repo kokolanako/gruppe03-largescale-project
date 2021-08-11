@@ -1,11 +1,11 @@
 {
   "general": {
-    "duration": "360",
-    "retries": "1",
-    "timeout": "10"
+    "duration": 360,
+    "retries": 1,
+    "timeout": 10
   },
   "server": {
-    "port": "13370",
+    "port": 13370,
     "ip": "127.0.0.1"
   },
   "organisation": {

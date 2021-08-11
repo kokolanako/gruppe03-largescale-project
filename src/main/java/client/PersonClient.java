@@ -60,11 +60,10 @@ public class PersonClient extends Client{
             String patternString = "\\[(.*?)\\]";//non-greedy match
             Pattern pattern = Pattern.compile(patternString);
             Matcher matcher = pattern.matcher(fullAction);
-            List<String> allMatches = new ArrayList<String>();
+            List<String> allMatches = new ArrayList<>();
 
             while (matcher.find()) {
                 allMatches.add(matcher.group(1).trim());
-//        System.out.println(matcher.group(1));
             }
             if (fullAction.contains("SUB") || fullAction.contains("ADD")) {
                 String messageType = null;

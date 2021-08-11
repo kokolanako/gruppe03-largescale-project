@@ -22,10 +22,10 @@ public abstract class Client {
   protected JSONObject jsonObject;
   protected ServerCommunicator serverCommunicator;
 
-  String ownLastName;
-  String ownFirstName;
+  protected String ownLastName;
+  protected String ownFirstName;
   @Getter
-  String id;
+  protected String id;
   protected String path;
   private Socket socket;
 
@@ -59,8 +59,8 @@ public abstract class Client {
     }
   }
 
-  public Client() throws IOException, ClassNotFoundException {
-    this.register();
+  public Client() {
+    //nothing, just exist
   }
 
 
@@ -80,7 +80,7 @@ public abstract class Client {
    * @throws IOException
    * @throws ClassNotFoundException
    */
-  private void register() throws IOException, ClassNotFoundException {
+  protected void register() throws IOException, ClassNotFoundException {
     Message answer = this.serverCommunicator.request(createRegistrationMessage(), "OK");
     if (answer != null) {
       System.out.println("Answer in thread: " + Thread.currentThread().getName() + " " + answer.getMessage_ID() + " received: " + answer.getTYPE() + " "
@@ -97,7 +97,7 @@ public abstract class Client {
     }
   }
 
-  private void disconnectAfterDuration() {
+  protected void disconnectAfterDuration() {
     Timer timer = new Timer();
     timer.schedule(new TimerTask() {
       @SneakyThrows
